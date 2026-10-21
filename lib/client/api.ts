@@ -20,12 +20,12 @@ export async function api<T = Record<string, unknown>>(path: string, options: Re
   } catch {
     throw new ApiError('Connexion impossible : vérifiez votre réseau.', 0);
   }
-  if (response.status === 401) {
+  const type = response.headers.get('content-type') ?? '';
+  const data = type.includes('application/json') ? await response.json() : null;
+  if (response.status === 401 && (data as { code?: string } | null)?.code === 'NON_AUTHENTIFIE') {
     if (typeof window !== 'undefined' && window.location.pathname !== '/') window.location.href = `/?suite=${encodeURIComponent(window.location.pathname)}`;
     throw new ApiError('Session expirée : reconnectez-vous.', 401);
   }
-  const type = response.headers.get('content-type') ?? '';
-  const data = type.includes('application/json') ? await response.json() : null;
   if (!response.ok) throw new ApiError((data as { error?: string } | null)?.error ?? `Erreur ${response.status}`, response.status, (data as { code?: string } | null)?.code);
   return data as T;
 }

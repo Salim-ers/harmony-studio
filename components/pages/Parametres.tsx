@@ -150,7 +150,7 @@ export default function Parametres() {
 
 function AddModel({ onAdd }: { onAdd: (m: string) => void }) {
   const [m, setM] = useState('');
-  return <form className="row" onSubmit={(e) => { e.preventDefault(); if (/^[a-z0-9.-]{3,80}$/.test(m)) { onAdd(m); setM(''); } }}><input className="input" style={{ width: 240 }} placeholder="identifiant-du-modele" value={m} onChange={(e) => setM(e.target.value.trim())} aria-label="Ajouter un modèle" /><button className="btn btn-sm"><Plus size={14} />Ajouter un modèle</button></form>;
+  return <form className="row row-wrap" onSubmit={(e) => { e.preventDefault(); if (/^[a-z0-9.-]{3,80}$/.test(m)) { onAdd(m); setM(''); } }}><input className="input" style={{ width: 240, maxWidth: '100%' }} placeholder="identifiant-du-modele" value={m} onChange={(e) => setM(e.target.value.trim())} aria-label="Ajouter un modèle" /><button className="btn btn-sm"><Plus size={14} />Ajouter un modèle</button></form>;
 }
 
 function ProspectionSettings({ cfg, setCfg, save, saving }: { cfg: Config; setCfg: (c: Config) => void; save: (p: Partial<Config>) => Promise<void>; saving: boolean }) {
@@ -208,7 +208,7 @@ function Matrices() {
             <textarea className="textarea mono" style={{ minHeight: 480, fontSize: 12 }} value={content} onChange={(e) => setContent(e.target.value)} aria-label="Contenu de la matrice" spellCheck={false} />
             <div className="row row-wrap between">
               <input className="input" style={{ maxWidth: 320 }} placeholder="Note de version (facultatif)" value={note} onChange={(e) => setNote(e.target.value)} aria-label="Note de version" />
-              <div className="row">
+              <div className="row row-wrap">
                 <button className="btn" onClick={async () => { try { setPreview(await api('/api/matrices/preview')); } catch (e) { onError(e); } }}><Eye size={15} />Prompt composé</button>
                 <button className="btn btn-primary" disabled={!dirty || content.length < 30} onClick={async () => { try { const r = await api<{ version: number }>(`/api/matrices/${kind}`, { json: { action: 'enregistrer', content, note } }); notify(`Version ${r.version} enregistrée et activée.`); setNote(''); await reload(); } catch (e) { onError(e); } }}><Save size={15} />Enregistrer une version</button>
               </div>

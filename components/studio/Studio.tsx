@@ -320,7 +320,7 @@ function Quality({ data, busy, onFix, onBuild }: { data: Detail; busy: boolean; 
   return (
     <div className="stack" style={{ gap: 12 }}>
       <div className="grid g-3" style={{ gap: 8 }}>
-        {groups.map(([l, list]) => <div key={l} style={{ background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 10, padding: '8px 10px' }}><div className="tiny muted">{l === 'erreur' ? 'Erreurs' : l === 'avertissement' ? 'Avertissements' : 'Infos'}</div><div className="serif" style={{ fontSize: 24, fontWeight: 600, color: l === 'erreur' && list.length ? 'var(--red)' : undefined }}>{list.length}</div></div>)}
+        {groups.map(([l, list]) => <div key={l} style={{ background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 10, padding: '8px 10px' }}><div className="tiny muted">{l === 'erreur' ? 'Erreurs' : l === 'avertissement' ? 'Avertissements' : 'Infos'}</div><div className="num" style={{ fontSize: 22, color: l === 'erreur' && list.length ? 'var(--red)' : undefined }}>{list.length}</div></div>)}
       </div>
       {checks.counts.erreur ? <button className="btn btn-gold" disabled={busy} onClick={onFix}><Wrench size={15} />Corriger automatiquement (ciblé)</button> : <Alert kind="success">Aucune erreur bloquante détectée par les contrôles automatiques.</Alert>}
       {groups.map(([l, list]) => list.length ? (

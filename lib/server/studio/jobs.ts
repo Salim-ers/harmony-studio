@@ -379,9 +379,11 @@ async function runStep(job: JobRow, step: StepRow): Promise<StepOutcome> {
     const system = await systemFor(ctx, plan);
     const files = ctx.job.state.files ?? {};
     if (render === 'react') {
-      const route = routesFromPlan(plan!).find((r) => r.file === `src/pages/${key.slice(5)}`);
-      if (!route) throw upstream('Page inconnue dans le plan.');
-      const page = plan!.pages[routesFromPlan(plan!).indexOf(route)];
+      const routes = routesFromPlan(plan!);
+      const index = routes.findIndex((r) => r.file === `src/pages/${key.slice(5)}`);
+      if (index < 0) throw upstream('Page inconnue dans le plan.');
+      const route = routes[index];
+      const page = plan!.pages[index];
       const res = await ai(ctx, 'page', system, reactPagePrompt(plan!, route, page, { siteConfig: files['src/site.config.js'] ?? '', theme: files['src/styles/theme.css'] ?? '', layout: files['src/components/Layout.jsx'] ?? '' }));
       const out = mergeFiles(ctx, res.text, { kind: 'react', require: route.file });
       return { detail: out.detail, ...usageOf(res) };

@@ -47,6 +47,9 @@ export async function GET(request: Request) {
     if (Number(n) > 0 && day === 1) await sql`INSERT INTO notifications(kind, title, body, link) VALUES ('rgpd', 'Durée de conservation dépassée', ${`${n} fiche(s) prospect sans activité depuis plus de ${config.prospecting.retentionMonths} mois.`}, '/parametres?onglet=prospection')`;
     await sql`DELETE FROM rate_limits WHERE window_start < now() - interval '2 days'`;
     await sql`DELETE FROM admin_sessions WHERE expires_at < now() - interval '30 days'`;
+    // Médias orphelins (envoi abandonné ou jamais rattaché à un projet) : suppression après 24 h.
+    await sql`DELETE FROM media_files f WHERE f.created_at < now() - interval '24 hours'
+      AND (f.status <> 'pret' OR NOT EXISTS (SELECT 1 FROM project_assets a WHERE a.media_id = f.id))`;
     return Response.json({ ok: true, runs: runs.length });
   } catch (e) {
     logError('cron', e);

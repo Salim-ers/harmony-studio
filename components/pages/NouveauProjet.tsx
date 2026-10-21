@@ -194,7 +194,7 @@ export default function NouveauProjet() {
               <label className="check"><input type="checkbox" checked={autoContinue} onChange={(e) => setAutoContinue(e.target.checked)} />Enchaîner la génération automatiquement si le plan ne contient aucune question bloquante</label>
             </>
           ) : null}
-          <div className="row between" style={{ marginTop: 8 }}>
+          <div className="row row-wrap between" style={{ marginTop: 8 }}>
             <button className="btn" disabled={step === 0 || !!busy} onClick={() => setStep((s) => s - 1)}><ArrowLeft size={15} />Précédent</button>
             {step < STEPS.length - 1 ? <button className="btn btn-primary" disabled={!canNext} onClick={() => setStep((s) => s + 1)}>Suivant<ArrowRight size={15} /></button>
               : <button className="btn btn-gold btn-lg" disabled={!!busy || !name.trim() || b.brief.trim().length < 15} onClick={create}>{busy ? <Loader2 size={16} className="spin" /> : <Wand2 size={16} />}{busy || 'Créer et lancer la planification'}</button>}

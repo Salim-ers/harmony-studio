@@ -109,7 +109,7 @@ export default function DevisEditor({ id }: { id: string | null }) {
             <div className="divider" />
             <div className="row between small"><span>Total HT</span><b>{fmtEuro(totals.ht)}</b></div>
             {q.vat_regime === 'tva' ? <div className="row between small"><span>TVA {q.vat_rate} %</span><b>{fmtEuro(totals.tva)}</b></div> : null}
-            <div className="row between"><span className="strong">Total {q.vat_regime === 'tva' ? 'TTC' : ''}</span><span className="serif" style={{ fontSize: 26, fontWeight: 600 }}>{fmtEuro(totals.ttc)}</span></div>
+            <div className="row between"><span className="strong">Total {q.vat_regime === 'tva' ? 'TTC' : ''}</span><span className="num" style={{ fontSize: 24 }}>{fmtEuro(totals.ttc)}</span></div>
             <p className="tiny faint">Totaux recalculés côté serveur à l’enregistrement.</p>
           </section>
           <section className="card">

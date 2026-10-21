@@ -36,6 +36,11 @@ describe('sites React', () => {
     const html = previewIndexHtml(all['index.html'], '/apercu/abc/');
     expect(html).toContain('<base href="/apercu/abc/" />');
     expect(html).toContain('__apercu/app.js');
+    if (process.env.EXPORT_DIR) {
+      const { mkdirSync, writeFileSync } = await import('node:fs');
+      const { dirname, join } = await import('node:path');
+      for (const [path, content] of Object.entries(all)) { const full = join(process.env.EXPORT_DIR, path); mkdirSync(dirname(full), { recursive: true }); writeFileSync(full, content); }
+    }
   });
 
   it('refuse les dépendances non autorisées et les imports introuvables', async () => {

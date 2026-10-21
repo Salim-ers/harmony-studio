@@ -107,7 +107,7 @@ export function runStaticChecks(files: GenFile[], ctx: { brief: BriefData; asset
     placeholders += (text.match(/à renseigner/gi) ?? []).length;
     if (/★★★★★|⭐/.test(page.content) && !/avis|témoignage/i.test(briefText)) add('avis', 'erreur', page.path, 'Notes / étoiles d’avis détectées alors qu’aucun avis réel n’a été fourni.');
     else if (/\b(t[ée]moignages?|avis clients?|ils nous font confiance)\b/i.test(text) && !/avis|témoignage/i.test(briefText)) add('avis-section', 'avertissement', page.path, 'Section avis/témoignages détectée : vérifier qu’elle ne contient que de vrais avis.');
-    const claims = text.match(/\b\d[\d\s]*\s?(ans d['’]exp[ée]rience|% de r[ée]ussite|clients satisfaits|projets r[ée]alis[ée]s|[ée]l[èe]ves form[ée]s)/gi) ?? [];
+    const claims = text.match(/(?<!\d)\d[\d\s]*\s?(ans d['’]exp[ée]rience|% de r[ée]ussite|clients satisfaits|projets r[ée]alis[ée]s|[ée]l[èe]ves form[ée]s)/gi) ?? [];
     for (const claim of claims) if (!briefText.includes(claim.toLowerCase().replace(/\s+/g, ' ').trim().split(' ')[0])) add('chiffre', 'erreur', page.path, `Chiffre non fourni par le client : « ${claim.trim()} ».`);
     for (const foreign of FOREIGN_SECTORS) if (!foreign.sector.test(sector) && foreign.terms.test(text)) add('autre-metier', 'erreur', page.path, `Vocabulaire d’un autre métier (${foreign.label}) détecté.`);
     if (/royal\s+auto/i.test(text) && !/royal/i.test(ctx.clientName)) add('fuite-reference', 'erreur', page.path, 'Mention de « Royal Auto-école » (exemple de référence) dans un autre projet.');
@@ -227,7 +227,7 @@ export function runReactChecks(
     placeholders += (src.match(/À renseigner/g) ?? []).length + (src.match(/<Missing\b/g) ?? []).length;
     if (/★★★★★|⭐/.test(src) && !/avis|témoignage/i.test(briefText)) add('avis', 'erreur', f.path, 'Étoiles d’avis détectées alors qu’aucun avis réel n’a été fourni.');
     else if (/\b(t[ée]moignages?|avis clients?|ils nous font confiance)\b/i.test(textOnly) && !/avis|témoignage/i.test(briefText)) add('avis-section', 'avertissement', f.path, 'Section avis/témoignages : vérifier qu’elle ne contient que de vrais avis.');
-    for (const claim of textOnly.match(/\b\d[\d\s]*\s?(ans d['’]exp[ée]rience|% de r[ée]ussite|clients satisfaits|projets r[ée]alis[ée]s)/gi) ?? [])
+    for (const claim of textOnly.match(/(?<!\d)\d[\d\s]*\s?(ans d['’]exp[ée]rience|% de r[ée]ussite|clients satisfaits|projets r[ée]alis[ée]s)/gi) ?? [])
       if (!briefText.includes(claim.trim().split(/\s/)[0])) add('chiffre', 'erreur', f.path, `Chiffre non fourni par le client : « ${claim.trim()} ».`);
     for (const c of src.matchAll(/<CountUp\b[^>]*value=\{?["']?([\d.]+)/g)) if (!briefText.includes(c[1])) add('chiffre', 'erreur', f.path, `Compteur sur un chiffre non fourni : ${c[1]}.`);
     for (const foreign of FOREIGN_SECTORS) if (!foreign.sector.test(sector) && foreign.terms.test(textOnly)) add('autre-metier', 'erreur', f.path, `Vocabulaire d’un autre métier (${foreign.label}) détecté.`);

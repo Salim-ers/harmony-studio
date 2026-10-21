@@ -121,5 +121,5 @@ function Kpi({ icon, label, value, hint, href, alert }: { icon: React.ReactNode;
   );
 }
 function Mini({ label, value, tone }: { label: string; value?: number; tone?: string }) {
-  return <div style={{ background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 10, padding: '10px 12px' }}><div className="tiny muted">{label}</div><div className="serif" style={{ fontSize: 26, fontWeight: 600, color: tone }}>{value ?? '—'}</div></div>;
+  return <div style={{ background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 10, padding: '10px 12px' }}><div className="tiny muted">{label}</div><div className="num" style={{ fontSize: 24, color: tone }}>{value ?? '—'}</div></div>;
 }

@@ -338,7 +338,7 @@ function SearchPanel({ onDone }: { onDone: () => void }) {
             {summary.error ? <Alert kind={summary.status === 'échec' ? 'error' : 'warn'}>{summary.error}</Alert> : null}
             <div className="grid g-4" style={{ gap: 10 }}>
               {[['Nouvelles pistes', summary.created, 'var(--green)'], ['Déjà connues', summary.merged + summary.duplicates, undefined], ['Écartées (faux positifs)', summary.rejected, 'var(--amber)'], ['Requêtes API', summary.apiCalls, undefined]].map(([l, v, c]) => (
-                <div key={String(l)} style={{ background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 10, padding: '10px 12px' }}><div className="tiny muted">{l}</div><div className="serif" style={{ fontSize: 26, fontWeight: 600, color: c as string | undefined }}>{v as number}</div></div>
+                <div key={String(l)} style={{ background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 10, padding: '10px 12px' }}><div className="tiny muted">{l}</div><div className="num" style={{ fontSize: 24, color: c as string | undefined }}>{v as number}</div></div>
               ))}
             </div>
             <details><summary className="small muted" style={{ cursor: 'pointer' }}>Requêtes exécutées ({summary.queries.length})</summary><ul className="small mono">{summary.queries.map((q) => <li key={q}>{q}</li>)}</ul></details>

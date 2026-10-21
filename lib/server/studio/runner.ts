@@ -45,7 +45,13 @@ export async function buildInSandbox(files: GenFile[], opts: { timeoutMs?: numbe
     };
     const hasLock = files.some((f) => f.path === 'package-lock.json');
     const installed = await run('Installation des dépendances', 'npm', [hasLock ? 'ci' : 'install', '--no-audit', '--no-fund', '--ignore-scripts'], 6 * 60_000);
-    await sandbox.updateNetworkPolicy('deny-all').catch(() => undefined);
+    // Le code généré (build, tests) ne doit JAMAIS s'exécuter avec un accès réseau : si la coupure échoue, on arrête.
+    try {
+      await sandbox.updateNetworkPolicy('deny-all');
+    } catch (e) {
+      steps.push({ name: 'Coupure du réseau', command: 'updateNetworkPolicy(deny-all)', exitCode: null, output: `Échec de la coupure réseau : construction annulée par sécurité. ${e instanceof Error ? e.message.slice(0, 500) : ''}`, durationMs: 0 });
+      return { executed: false, ok: false, steps, ran_at, reason: 'Coupure réseau impossible : le build n’a pas été exécuté.' };
+    }
     if (!installed) return { executed: true, ok: false, steps, ran_at };
     const pkg = JSON.parse(files.find((f) => f.path === 'package.json')?.content ?? '{}') as { scripts?: Record<string, string> };
     let ok = true;

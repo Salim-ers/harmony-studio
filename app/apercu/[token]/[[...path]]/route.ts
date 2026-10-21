@@ -12,16 +12,20 @@ import type { GenFile } from '@/lib/server/ai/fileformat';
 export const dynamic = 'force-dynamic';
 
 function notFoundPage() {
-  return new Response('<!doctype html><html lang="fr"><meta charset="utf-8"><title>Aperçu indisponible</title><p style="font-family:sans-serif;padding:2rem">Aperçu introuvable ou expiré. Rouvrez-le depuis Harmony Studio.</p></html>', { status: 404, headers: previewHeaders('text/html; charset=utf-8') });
+  return new Response('<!doctype html><html lang="fr"><meta charset="utf-8"><title>Aperçu indisponible</title><p style="font-family:sans-serif;padding:2rem">Aperçu introuvable ou expiré (validité 30 min, liée à votre session). Cliquez sur « Recharger » dans Harmony Studio.</p></html>', { status: 404, headers: previewHeaders('text/html; charset=utf-8') });
 }
 
 export async function GET(_request: Request, context: { params: Promise<{ token: string; path?: string[] }> }) {
   const { token, path = [] } = await context.params;
   const access = verifyPreview(token);
-  if (!access || !UUID_RE.test(access.projectId) || !UUID_RE.test(access.versionId)) return notFoundPage();
-  const rel = path.map((p) => decodeURIComponent(p)).join('/');
+  if (!access || !UUID_RE.test(access.projectId) || !UUID_RE.test(access.versionId) || !UUID_RE.test(access.sessionId)) return notFoundPage();
+  let rel: string;
+  try { rel = path.map((p) => decodeURIComponent(p)).join('/'); } catch { return notFoundPage(); }
   if (rel.includes('..') || rel.includes('\\') || rel.length > 200) return notFoundPage();
   const sql = db();
+  // Le jeton meurt avec la session qui l'a émis (déconnexion, révocation, expiration).
+  const live = await sql`SELECT 1 FROM admin_sessions WHERE id = ${access.sessionId} AND revoked_at IS NULL AND expires_at > now()`;
+  if (!live.length) return notFoundPage();
   const [version] = await sql<{ files: GenFile[]; preview_js: string | null; preview_css: string | null; render: string }>`
     SELECT v.files, v.preview_js, v.preview_css, p.render FROM project_versions v JOIN projects p ON p.id = v.project_id
     WHERE v.id = ${access.versionId} AND v.project_id = ${access.projectId}`;

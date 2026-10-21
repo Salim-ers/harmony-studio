@@ -4,7 +4,8 @@
  */
 import { db, type Db } from '../db';
 import { notify } from '../audit';
-import { logError } from '../http';
+import { HttpError, logError } from '../http';
+import { getConfig } from '../settings';
 import type { Strategy } from '@/lib/shared/constants';
 import { braveSearch, BraveRateLimitError } from './brave';
 import { classify, type Classified } from './classify';
@@ -104,6 +105,12 @@ export async function runSearch(
 ): Promise<RunSummary> {
   const sql = db();
   const queries = buildQueries({ ...params, maxQueries: params.maxQueries });
+  // Plafond mensuel Brave appliqué ici pour TOUS les déclencheurs (manuel, recherche enregistrée, veille planifiée).
+  const config = await getConfig();
+  const [used] = await sql<{ n: number }>`SELECT count(*)::int AS n FROM usage_events WHERE provider = 'brave' AND NOT is_demo AND created_at >= date_trunc('month', now())`;
+  const planned = queries.length * Math.max(1, Math.min(2, params.pages ?? 1));
+  if (config.brave.monthlyQueryCap > 0 && Number(used.n) + planned > config.brave.monthlyQueryCap)
+    throw new HttpError(429, `Plafond mensuel de requêtes Brave atteint (${used.n}/${config.brave.monthlyQueryCap}). Modifiez-le dans Paramètres si votre abonnement le permet.`, 'QUOTA');
   const [run] = await sql<{ id: string }>`INSERT INTO search_runs(profile_id, trigger, params, queries)
     VALUES (${opts.profileId ?? null}, ${opts.trigger}, ${JSON.stringify(params)}::jsonb, ${JSON.stringify(queries)}::jsonb) RETURNING id`;
   const summary: RunSummary = { runId: run.id, status: 'terminé', queries, found: 0, created: 0, merged: 0, duplicates: 0, rejected: 0, apiCalls: 0, demo: false, error: '', newIds: [] };

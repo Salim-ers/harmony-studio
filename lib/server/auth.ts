@@ -12,8 +12,9 @@ import { env } from './env';
 import { unauthorized } from './http';
 import { hashKey } from './ratelimit';
 
-export const SESSION_ABSOLUTE_HOURS = Number(process.env.SESSION_TTL_HOURS || 168);
-export const SESSION_IDLE_HOURS = Number(process.env.SESSION_IDLE_HOURS || 48);
+// Durées par défaut resserrées après audit (L5) : 3 jours maximum, 12 h d'inactivité. Réglables par variables d'environnement.
+export const SESSION_ABSOLUTE_HOURS = Number(process.env.SESSION_TTL_HOURS || 72);
+export const SESSION_IDLE_HOURS = Number(process.env.SESSION_IDLE_HOURS || 12);
 
 export function cookieName() {
   return env.isProduction() ? '__Host-harmony_session' : 'harmony_session';
@@ -22,19 +23,46 @@ export function cookieName() {
 /** Hash de démonstration constant : permet un temps de calcul identique quand l'e-mail est faux. */
 const DUMMY_SALT = '00000000000000000000000000000000';
 
+/**
+ * Paramètres scrypt actuels (équivalence OWASP « N=2^14, r=8, p=5 ») : même mémoire que les paramètres par défaut
+ * de Node (16 Mo par calcul, sans risque de saturation si plusieurs connexions arrivent en même temps sur une
+ * fonction Vercel), mais cinq fois plus coûteux en calcul pour un attaquant.
+ * Formats acceptés :
+ *  - « scrypt2:N:r:p:sel:hash » (actuel, produit par npm run hash-password) ;
+ *  - « scrypt:sel:hash » (V1 : N=16384, r=8, p=1) — toujours valide, à régénérer quand vous changez de mot de passe.
+ */
+export const SCRYPT_PARAMS = { N: 16384, r: 8, p: 5 } as const;
+
+type ParsedHash = { salt: string; hash: Buffer; N: number; r: number; p: number };
+
+function parseHash(raw: string): ParsedHash | null {
+  const parts = raw.split(':');
+  const hexOk = (salt: string, hash: string) => /^[a-f0-9]{32}$/.test(salt) && /^[a-f0-9]{128}$/.test(hash);
+  if (parts.length === 3 && parts[0] === 'scrypt' && hexOk(parts[1], parts[2])) return { salt: parts[1], hash: Buffer.from(parts[2], 'hex'), N: 16384, r: 8, p: 1 };
+  if (parts.length === 6 && parts[0] === 'scrypt2' && hexOk(parts[4], parts[5])) {
+    const [N, r, p] = parts.slice(1, 4).map(Number);
+    // Bornes : empêchent une configuration erronée de rendre chaque connexion excessivement coûteuse.
+    const powerOfTwo = Number.isInteger(N) && N >= 16384 && N <= 131072 && (N & (N - 1)) === 0;
+    if (powerOfTwo && Number.isInteger(r) && r >= 8 && r <= 16 && Number.isInteger(p) && p >= 1 && p <= 16) return { salt: parts[4], hash: Buffer.from(parts[5], 'hex'), N, r, p };
+  }
+  return null;
+}
+
+function derive(password: string, salt: string, params: { N: number; r: number; p: number }) {
+  return scryptSync(password.slice(0, 512), salt, 64, { N: params.N, r: params.r, p: params.p, maxmem: 256 * params.N * params.r });
+}
+
 export function verifyPassword(password: string) {
-  const parts = env.adminPasswordHash().split(':');
-  const valid = parts.length === 3 && parts[0] === 'scrypt' && /^[a-f0-9]{32}$/.test(parts[1]) && /^[a-f0-9]{128}$/.test(parts[2]);
-  const salt = valid ? parts[1] : DUMMY_SALT;
-  const candidate = scryptSync(password.slice(0, 512), salt, 64);
-  if (!valid) return false;
-  const expected = Buffer.from(parts[2], 'hex');
-  return expected.length === candidate.length && timingSafeEqual(candidate, expected);
+  const parsed = parseHash(env.adminPasswordHash());
+  const candidate = derive(password, parsed?.salt ?? DUMMY_SALT, parsed ?? SCRYPT_PARAMS);
+  if (!parsed) return false;
+  return parsed.hash.length === candidate.length && timingSafeEqual(candidate, parsed.hash);
 }
 
 export function hashPassword(password: string) {
   const salt = randomBytes(16).toString('hex');
-  return `scrypt:${salt}:${scryptSync(password, salt, 64).toString('hex')}`;
+  const { N, r, p } = SCRYPT_PARAMS;
+  return `scrypt2:${N}:${r}:${p}:${salt}:${derive(password, salt, SCRYPT_PARAMS).toString('hex')}`;
 }
 
 export function verifyEmail(email: string) {

@@ -3,6 +3,7 @@
  * Les actions externes (GitHub, Vercel) exigent une confirmation explicite côté serveur.
  */
 import { createHash } from 'node:crypto';
+import { isForbiddenLocation } from '../ai/fileformat';
 import { strToU8, zipSync } from 'fflate';
 import { env } from '../env';
 import { badRequest, forbidden, notConfigured, upstream } from '../http';
@@ -28,7 +29,8 @@ export function qualityReport(checks: CheckReport | null, buildReport: unknown) 
 
 /** Rassemble les fichiers d'une version + médias (dérivés web) au bon emplacement selon le rendu. */
 export async function collectFiles(projectId: string, files: GenFile[], render: string, extras: { checks: CheckReport | null; build: unknown }): Promise<BinFile[]> {
-  const out: BinFile[] = files.map((f) => ({ path: f.path, data: strToU8(f.content) }));
+  // Défense en profondeur : même une version ancienne ne peut pas exporter de fichier de CI, de hook Git ou de secret.
+  const out: BinFile[] = files.filter((f) => !isForbiddenLocation(f.path)).map((f) => ({ path: f.path, data: strToU8(f.content) }));
   const assets = await getAssets(projectId);
   const prefix = render === 'react' ? 'public/images/' : render === 'nextjs' ? 'public/images/' : 'images/';
   for (const a of assets.filter((x) => x.kind === 'image')) {

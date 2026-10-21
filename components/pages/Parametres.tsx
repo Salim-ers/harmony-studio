@@ -254,7 +254,7 @@ function Security({ integrations }: { integrations: Settings['integrations'] }) 
           <li>Connexion limitée (5 essais / 15 min par IP, 40 / h au total) et journalisée.</li>
           <li>Toutes les API vérifient la session côté serveur ; requêtes mutantes contrôlées par origine.</li>
         </ul>
-        {totp ? <Alert kind="success"><KeyRound size={14} /> Double authentification TOTP active.</Alert> : <Alert kind="warn">Double authentification non activée. Générez un secret avec <span className="mono">npm run totp:generate</span>, ajoutez-le à votre application d’authentification, puis définissez <span className="mono">ADMIN_TOTP_SECRET</span> sur Vercel.</Alert>}
+        {totp ? <Alert kind="success"><KeyRound size={14} /> Double authentification TOTP active.</Alert> : <Alert kind="warn">Double authentification non activée : sans elle, une attaque distribuée sur la page de connexion peut suspendre votre accès jusqu’à une heure. Générez un secret avec <span className="mono">npm run totp:generate</span>, ajoutez-le à votre application d’authentification, puis définissez <span className="mono">ADMIN_TOTP_SECRET</span> sur Vercel.</Alert>}
       </section>
       <section className="card">
         <div className="card-head"><div className="card-title">Sessions actives</div><button className="btn btn-sm" disabled={busy} onClick={async () => { setBusy(true); try { const r = await api<{ count: number }>('/api/security/sessions', { method: 'DELETE' }); notify(`${r.count} autre(s) session(s) révoquée(s).`); await reload(); } catch (e) { onError(e); } finally { setBusy(false); } }}>{busy ? <Loader2 size={14} className="spin" /> : null}Déconnecter les autres</button></div>

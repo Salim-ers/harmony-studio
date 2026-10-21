@@ -29,7 +29,7 @@ export function logError(context: string, error: unknown, extra: Record<string, 
   return id;
 }
 
-const SECRET_PATTERNS = [/sk-ant-[A-Za-z0-9_-]+/g, /gh[pousr]_[A-Za-z0-9]{20,}/g, /github_pat_[A-Za-z0-9_]+/g, /postgres(ql)?:\/\/[^\s]+/g, /Bearer\s+[A-Za-z0-9._-]+/gi, /scrypt:[a-f0-9:]+/g];
+const SECRET_PATTERNS = [/sk-ant-[A-Za-z0-9_-]+/g, /gh[pousr]_[A-Za-z0-9]{20,}/g, /github_pat_[A-Za-z0-9_]+/g, /postgres(ql)?:\/\/[^\s]+/g, /Bearer\s+[A-Za-z0-9._-]+/gi, /scrypt2?:[a-f0-9:]+/g];
 export function redact(text: string) {
   return SECRET_PATTERNS.reduce((acc, re) => acc.replace(re, '[masqué]'), text);
 }
@@ -56,10 +56,29 @@ export function toResponse(error: unknown, context = 'api') {
 export async function readJson<S extends ZodTypeAny>(request: Request, schema: S, maxBytes = 200_000): Promise<ZodInfer<S>> {
   const length = Number(request.headers.get('content-length') || 0);
   if (length > maxBytes) throw new HttpError(413, 'Requête trop volumineuse.', 'TROP_GROS');
-  const text = await request.text();
-  if (text.length > maxBytes) throw new HttpError(413, 'Requête trop volumineuse.', 'TROP_GROS');
-  const data = text ? JSON.parse(text) : {};
+  const text = await readBodyLimited(request, maxBytes);
+  let data: unknown = {};
+  try { data = text ? JSON.parse(text) : {}; } catch { throw new HttpError(400, 'Corps de requête JSON invalide.', 'JSON_INVALIDE'); }
   return schema.parse(data);
+}
+
+/** Lit le corps par morceaux et s'arrête dès que la limite est dépassée (même sans Content-Length, en « chunked »). */
+export async function readBodyLimited(request: Request, maxBytes: number) {
+  if (!request.body) return '';
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel().catch(() => undefined);
+      throw new HttpError(413, 'Requête trop volumineuse.', 'TROP_GROS');
+    }
+    chunks.push(value);
+  }
+  return Buffer.concat(chunks).toString('utf8');
 }
 
 export function json(data: unknown, init: ResponseInit = {}) {

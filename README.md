@@ -1,71 +1,83 @@
 # Harmony Studio — Harmony Solutions
 
-Application Next.js privée, déployable sur Vercel, comprenant **prospection commerciale** et **création de sites par Claude**. Interface intégralement en français.
+Cockpit **privé** (un seul propriétaire) qui réunit deux espaces :
 
-## Fonctions de cette V1
+- **Prospection intelligente** : recherche d’opportunités réelles et sourcées (Brave Search API), qualification explicable, CRM avec pipeline, relances, devis, conformité RGPD.
+- **Création IA** : une idée + des photos → un vrai projet généré par Claude (sites **React + Motion** ou HTML, applications Next.js), avec plan validé, aperçu isolé, modifications par conversation, versions, contrôles qualité et export.
 
-- Accès propriétaire unique : aucun formulaire d'inscription, vérification d'un mot de passe haché scrypt, cookie signé HttpOnly et limitation des essais de connexion en base.
-- Prospection via **Brave Search API** : demandes de site, commerces, logiciels/ERP, recherche libre, zone géographique, déduplication, scoring indicatif et lien vers la source.
-- Fiches prospect : statut, notes, historique de création, filtres, ajout manuel, export CSV et brouillon de message à personnaliser (aucun envoi automatique).
-- Veille quotidienne configurable (Vercel Cron, désactivée par défaut).
-- Studio IA : nom, prestation, direction artistique, brief, jusqu'à 6 photos, matrice éditable, génération Claude, amélioration d'une version existante et sauvegarde Neon.
-- Prévisualisation HTML en iframe isolée et export d'un fichier HTML autonome.
-- Bibliothèque des projets sauvegardés.
+Interface 100 % en français, responsive, thème clair/sombre. Hébergement : **Vercel** + **Neon PostgreSQL**.
 
-## Installation
+> Mode d’emploi pas à pas : [MODE-EMPLOI.md](MODE-EMPLOI.md) · Déploiement : [DEPLOYMENT.md](DEPLOYMENT.md) · Variables : [ENVIRONMENT.md](ENVIRONMENT.md) · Sécurité : [SECURITY.md](SECURITY.md) · Sauvegarde : [BACKUP.md](BACKUP.md) · Audit : [AUDIT-FINAL.md](AUDIT-FINAL.md)
 
-**Prérequis** : Node.js 20+, un projet Vercel **Pro** pour un usage professionnel, une base Neon Postgres, un store Vercel Blob **public**, clés API Brave et Anthropic. La formule gratuite Vercel Hobby est réservée à un usage personnel et non commercial. La génération Claude peut nécessiter jusqu’à 120 secondes, également plus adaptée aux limites Pro.
+## Ce qui est réellement implémenté et testé
 
-1. Importer ce dossier dans un dépôt GitHub privé, puis créer un projet sur Vercel depuis ce dépôt. (Ou en local : `npm install && npm run dev`.)
-2. Dans [Neon](https://console.neon.tech), créer une base, puis exécuter la totalité de `scripts/schema.sql` dans **SQL Editor**.
-3. Copier `.env.example` en `.env.local` pour le local. Sur Vercel, configurer les mêmes variables dans **Settings → Environment Variables**.
-4. Exécuter `npm run hash-password` pour obtenir `ADMIN_PASSWORD_HASH`. Générer séparément des secrets forts pour `SESSION_SECRET` (32 caractères minimum) et `CRON_SECRET` : `openssl rand -hex 32`. **Ne jamais stocker le mot de passe en clair, ni publier `.env.local`.**
-5. Dans Vercel, créer/attacher **Storage → Blob** au projet et vérifier la variable `BLOB_READ_WRITE_TOKEN`.
-6. Créer les clés `BRAVE_SEARCH_API_KEY` (Brave Search) et `ANTHROPIC_API_KEY` (Anthropic Console), puis les renseigner côté serveur. La variable `ANTHROPIC_MODEL` permet de changer de modèle s'il existe une version plus récente accessible.
-7. Lancer `npm install`, `npm run typecheck`, `npm run build` et déployer sur Vercel. Le premier accès est la page de connexion avec `ADMIN_EMAIL` et le mot de passe choisi.
-8. Dans **Paramètres**, désactiver ou activer la veille quotidienne, définir la zone et enregistrer.
-9. Coller ultérieurement le prompt habituel dans **Paramètres → Matrice de création** ; il sera pris en compte au prochain appel Claude.
+| Domaine | Fonctionnalités | Vérification |
+|---|---|---|
+| Accès | Compte unique (scrypt renforcé), sessions en base révocables, cookie `HttpOnly`/`Secure`/`SameSite=Strict`, expiration absolue (3 j) et d’inactivité (12 h), 2FA TOTP facultative avec anti-rejeu, limitation des tentatives qui ne peut pas bloquer le propriétaire équipé de la 2FA, contrôle d’origine (CSRF), CSP à nonce | tests d’intégration + E2E |
+| Prospection | 3 stratégies distinctes (demandes explicites, signaux d’opportunité, projets/marchés), zones, métiers, besoins, fraîcheur, requêtes variées, rejet des faux positifs (agences, emplois, classements, profils freelances), déduplication (URL canonique + entité), provenance et preuves, score explicable, recherches enregistrées, veille planifiée (Vercel Cron), historique des exécutions | tests unitaires + intégration (Brave simulé) |
+| CRM | Tableau + pipeline glisser-déposer, fiche détaillée, notes, tâches/relances, historique, tags, favoris, archivage, actions groupées, import/export CSV (anti-injection de formules), assistant de message (Claude ou modèle), contact « déclaré » (aucun envoi automatique), opposition RGPD, effacement, purge selon durée de conservation, analyse de site (anti-SSRF, respect de robots.txt) | intégration + E2E |
+| Devis | Catalogue de tarifs de référence modifiable, régime de TVA configurable (à définir / franchise / assujetti), totaux calculés côté serveur, numérotation, version imprimable/PDF signalant les mentions manquantes | intégration |
+| Création IA | Assistant en 5 étapes, médias **privés** (upload découpé, type réel vérifié, EXIF, originaux conservés, dérivés), 4 matrices génériques versionnées (Design, Technique, SEO, Audit) issues de vos fichiers, pipeline persistant étape par étape (plan à valider → génération → assemblage → compilation → contrôles → correction automatique → version), budget plafonné, coûts par étape, aperçu isolé (jeton signé + CSP `sandbox`), desktop/tablette/mobile, modifications ciblées, différentiel, restauration, ZIP, GitHub privé et déploiement Vercel avec confirmation | intégration + E2E (Claude simulé) + build Vite réel du site exporté |
+| Kit React + Motion | Coquille, routeur, transitions de pages, Reveal, Stagger, TextReveal, Parallax/ParallaxImage, Magnetic, TiltCard, Marquee, CountUp, ScrollProgress, formulaire honnête (mailto), composants « À renseigner » / « Non configuré », `prefers-reduced-motion` | compilation esbuild + `vite build` réel |
 
-### Attention à l'abonnement Claude
+**Non vérifié en conditions réelles (clés absentes dans l’environnement de développement)** : appels réels à Claude, à Brave, à GitHub, à Vercel et au runner Vercel Sandbox. Leur code est implémenté et testé contre des réponses simulées conformes aux API officielles ; un premier essai avec vos clés est indispensable (voir DEPLOYMENT.md, « Recette après déploiement »).
 
-L'abonnement Claude Max et l'API Anthropic sont deux voies d'accès distinctes. Selon l'offre, des crédits API mensuels peuvent être inclus ; les appels API supplémentaires suivent la tarification Anthropic. Le site hébergé sur Vercel utilise **la clé API** (et non les cookies de session de claude.ai ni un abonnement Claude web « détourné »). Le Claude Agent SDK lié à certains abonnements est une option distincte pour une installation locale et ne s'exécute pas directement comme session personnelle persistante sur Vercel.
+## Architecture
 
-### Photos et confidentialité
+```
+app/
+  page.tsx                 connexion
+  (app)/                   pages privées (session vérifiée côté serveur) : dashboard, prospection, taches, devis, creation, parametres, journal
+  impression/devis/[id]    version imprimable
+  apercu/[token]/…         serveur d’aperçu isolé (jeton signé, CSP sandbox)
+  api/…                    ~60 routes privées (adminRoute : session + origine + limitation) + health + cron
+lib/server/                logique serveur (jamais importée côté navigateur)
+  auth, api, http, ratelimit, totp, db, settings, env, audit, safe-fetch
+  prospects/               moteur de recherche, classification, score, CSV, analyse de site
+  ai/                      client Claude (streaming, coûts, budget), matrices, consignes, format de fichiers, simulation
+  studio/                  jobs, médias, versions, contrôles, aperçu, sites React, export/GitHub/Vercel, runner
+templates/react-site/      kit React + Motion injecté dans chaque site client
+db/migrations/             001 (V1), 002 (V2), 003 (React) — non destructives ; db/rollback/ pour revenir en arrière
+db/reference/              vos fichiers d’origine (matrice Royal, audit final)
+tests/                     unitaires, intégration (Postgres réel), E2E Playwright
+```
 
-La connexion à Harmony Studio et la base de données sont privées, mais les photos de cette V1 sont enregistrées dans **Vercel Blob avec accès `public`** pour que Claude puisse les consulter. Toute personne ayant l'URL peut voir une photo : ne pas y mettre de pièces d'identité, documents confidentiels, coordonnées privées, etc. Pour une confidentialité complète des médias, il faudrait une architecture avec stockage privé et transfert authentifié/base64 vers Claude.
+Choix techniques : Next.js 15 (App Router) + React 19 + TypeScript strict, **Zod** pour toute validation, **SQL paramétré** via un unique utilitaire (`lib/server/db.ts` : driver HTTP Neon en production, `pg` en local), migrations SQL versionnées (`npm run db:migrate`), CSS maison (aucun framework), `lucide-react` pour les icônes, `sharp` pour les images, `esbuild` pour compiler les aperçus React sans exécuter le code généré.
 
-### Cadre légal et qualité des prospects
+## Démarrage local
 
-Le moteur de recherche renvoie des **résultats indexés** (pas une liste vérifiée d'entreprises qui souhaitent réellement acheter un site). Il n'explore pas clandestinement les réseaux sociaux, ne récolte pas automatiquement des e-mails personnels et n'envoie aucun message commercial automatique. Vérifier la source, la date, les conditions du site source et le contexte avant contact, respecter le RGPD et les règles applicables à la prospection B2B, prévoir une opposition simple.
+Prérequis : Node.js 22 (22.12 ou plus récent), PostgreSQL 14+ (ou une base Neon).
 
-### Limites de la V1
+```bash
+npm ci
+cp .env.example .env.local        # puis compléter (voir ENVIRONMENT.md)
+npm run hash-password             # → ADMIN_PASSWORD_HASH
+npm run db:migrate                # applique les migrations
+npm run dev                       # http://localhost:3000
+```
 
-- Les recherches indexées ne donnent pas un accès garanti à toutes les annonces, réseaux sociaux et marchés. Certaines sources ne sont pas indexées.
-- La « création » produit un **site vitrine statique autonome** avec HTML, CSS et JS, pas encore un projet Next.js multi-fichiers ni un véritable ERP avec backend, authentification client ou Stripe intégré. De telles fonctionnalités demandent une étape de développement et de tests supplémentaire.
-- Un résultat généré par IA doit être relu et testé (contenu, accessibilité, responsive, SEO, sécurité et conformité légale) avant livraison au client.
-- Le HTML est prévisualisé dans une iframe isolée avec restrictions CSP, mais son export ne doit pas être déployé sans audit des scripts. Les photos de génération peuvent contenir des droits d'auteur : vérifier les droits d'utilisation.
-- Les recherches automatiques s'exécutent une fois par jour à 7 h **UTC** ; Vercel Hobby ne garantit pas la précision de la minute.
-- Éviter de partager l'URL du projet avec d'autres personnes ; sur Vercel prévoir la protection des déploiements Preview, et un domaine dédié pour la production.
-- Selon le modèle et la taille du site, une génération longue peut dépasser la durée autorisée par le forfait Vercel, nécessitant un backend de tâches asynchrones.
+Sans clés Claude/Brave, vous pouvez tester toute la mécanique avec `HARMONY_MOCKS=1` (réponses simulées, clairement marquées « SIMULATION » / « Donnée de test », impossible sur Vercel).
 
-## Pistes pour la V2
+## Tests
 
-- Connecteurs d'annonces soumis aux CGU de chaque plateforme, vérification automatique des sites, enrichissement entreprises via données professionnelles autorisées et détection de prospects mieux qualifiés.
-- Assistant de rédaction de messages commerciaux avec relecture humaine, historique des relances et devis.
-- Génération de projets **Next.js multi-fichiers** avec agent de code, dépôt GitHub privé, preview à la demande, déploiement Vercel et migrations Neon automatisées.
-- Génération de fonctionnalités dynamiques : commandes, tableaux de bord métier, comptes clients, notifications et paiements.
-- Conserver les images dans un stockage privé, connecter une bibliothèque média clients, historique de versions et snapshots.
-- Journal d'audit et authentification à deux facteurs.
+```bash
+npm run typecheck
+npm run lint
+npm test                      # unitaires + intégration (nécessite PostgreSQL local : postgresql://postgres@localhost:5432)
+npm run build && npm start    # puis, dans un autre terminal :
+npm run test:e2e              # Playwright (base locale, HARMONY_MOCKS=1, port 3100 par défaut — voir playwright.config.ts)
+```
 
-## Structure
+Résultats de la dernière exécution : voir [AUDIT-FINAL.md](AUDIT-FINAL.md#test-status).
 
-- `app/api/auth` : connexion/déconnexion.
-- `app/api/prospects` : recherche, carnet de prospects et mises à jour.
-- `app/api/projects` : projets et génération.
-- `app/api/settings` : matrice et veille.
-- `app/api/upload` : token d'upload Vercel Blob.
-- `app/api/cron` : veille protégée par `CRON_SECRET`.
-- `lib` : Neon, sessions, Claude, logique de prospection.
-- `components` : interface administrateur.
+## Reprise de la V1
 
-**À noter :** le code a été préparé sans accès à tes comptes ni à tes clés ; il n'est **pas déployé**. Teste les intégrations avec tes propres identifiants avant usage commercial.
+La V1 n’est pas jetée : la migration `002` conserve prospects, projets, versions HTML et votre matrice personnalisée (statuts remappés, HTML converti en version `index.html`, sources et notes historisées). Les photos V1 stockées en Vercel Blob **public** peuvent être rapatriées en stockage privé depuis le projet concerné (bouton « Rapatrier en stockage privé »). Le code V1 reste consultable dans l’historique Git (premier commit).
+
+## Limites connues (honnêtes)
+
+- Les résultats de recherche dépendent de l’index Brave : certaines annonces, réseaux sociaux ou plateformes ne sont pas indexés. Aucun scraping de plateformes protégées n’est réalisé.
+- Une demande « explicite » est détectée automatiquement dans un extrait : il faut toujours relire la source avant de contacter.
+- Les applications métier générées doivent être construites et testées dans le runner isolé (Vercel Sandbox) ; sans lui, elles restent au statut « Construction » et ne sont jamais déclarées fonctionnelles.
+- Les sites React sont des applications monopage : le contenu est rendu par JavaScript (Google l’indexe ; d’autres robots moins bien). Titres et descriptions sont posés par page ; un pré-rendu statique pourra être ajouté.
+- Aucune intégration de paiement, de réservation ou d’envoi d’e-mail n’est branchée par défaut dans les sites générés : elles apparaissent « non configurées ».

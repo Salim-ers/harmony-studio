@@ -8,20 +8,35 @@
 import { lookup as dnsLookup } from 'node:dns';
 import http from 'node:http';
 import https from 'node:https';
-import { isIP, type LookupFunction } from 'node:net';
+import { BlockList, isIP, type LookupFunction } from 'node:net';
 
 export class UnsafeUrlError extends Error {}
 
+/**
+ * Plages non publiques. BlockList (Node) compare les adresses sous leur forme binaire :
+ * aucune écriture alternative (IPv4 mappée en hexadécimal « ::ffff:7f00:1 », zéros compressés…)
+ * ne peut contourner le filtre, contrairement à une comparaison de chaînes.
+ * Deux listes distinctes : BlockList compare aussi les IPv4 aux règles IPv6 sous forme mappée,
+ * la règle ::ffff:0:0/96 bloquerait donc toutes les IPv4 si elle partageait la liste.
+ */
+const BLOCKED_V4 = new BlockList();
+const BLOCKED_V6 = new BlockList();
+for (const [net, prefix] of [
+  ['0.0.0.0', 8], ['10.0.0.0', 8], ['100.64.0.0', 10], ['127.0.0.0', 8], ['169.254.0.0', 16], ['172.16.0.0', 12],
+  ['192.0.0.0', 24], ['192.0.2.0', 24], ['192.168.0.0', 16], ['198.18.0.0', 15], ['198.51.100.0', 24], ['203.0.113.0', 24], ['224.0.0.0', 3],
+] as const) BLOCKED_V4.addSubnet(net, prefix, 'ipv4');
+for (const [net, prefix] of [
+  ['::', 96], // non spécifiée, boucle locale ::1 et IPv4 « compatibles » (obsolètes)
+  ['::ffff:0:0', 96], // IPv4 mappées : jamais légitimes dans une réponse DNS publique
+  ['64:ff9b::', 96], ['64:ff9b:1::', 48], // NAT64
+  ['100::', 64], ['2001::', 32], ['2001:db8::', 32], ['2002::', 16], // discard, Teredo, documentation, 6to4
+  ['fc00::', 7], ['fe80::', 10], ['fec0::', 10], ['ff00::', 8],
+] as const) BLOCKED_V6.addSubnet(net, prefix, 'ipv6');
+
 export function isPrivateIp(ip: string) {
-  if (isIP(ip) === 4) {
-    const [a, b] = ip.split('.').map(Number);
-    return a === 0 || a === 10 || a === 127 || (a === 100 && b >= 64 && b <= 127) || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31)
-      || (a === 192 && b === 168) || (a === 192 && b === 0) || (a === 198 && (b === 18 || b === 19)) || a >= 224;
-  }
-  const v6 = ip.toLowerCase();
-  if (v6 === '::' || v6 === '::1') return true;
-  if (v6.startsWith('::ffff:')) return isPrivateIp(v6.slice(7));
-  return /^(fc|fd|fe8|fe9|fea|feb|ff)/.test(v6) || v6.startsWith('64:ff9b:') || v6.startsWith('2001:db8');
+  const version = isIP(ip);
+  if (version === 0) return true; // tout ce qui n'est pas une IP valide est refusé par prudence
+  return version === 4 ? BLOCKED_V4.check(ip, 'ipv4') : BLOCKED_V6.check(ip, 'ipv6');
 }
 
 export function assertPublicUrl(raw: string) {

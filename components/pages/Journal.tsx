@@ -28,7 +28,7 @@ export default function Journal() {
             <div className="grid g-3">
               <div className="card kpi"><div className="kpi-label">Claude ce mois-ci (estimation)</div><div className="kpi-value">{fmtUsd(usage.data.month.total)}</div><div className="kpi-hint">Calculé avec la grille de Paramètres ; la facture Anthropic fait foi.</div></div>
               <div className="card kpi"><div className="kpi-label">Appels sans coût calculable</div><div className="kpi-value">{usage.data.month.unknownCalls}</div><div className="kpi-hint">« estimation indisponible » (modèle hors grille)</div></div>
-              <div className="card kpi"><div className="kpi-label">Requêtes Brave ce mois-ci</div><div className="kpi-value">{usage.data.byOperation.filter((o) => o.provider === 'brave').reduce((s, o) => s + o.calls, 0)}</div><div className="kpi-hint">Coût selon votre abonnement Brave</div></div>
+              <div className="card kpi"><div className="kpi-label">Requêtes Brave ce mois-ci</div><div className="kpi-value">{usage.data.byOperation.filter((o) => o.provider === 'brave').reduce((s, o) => s + o.calls, 0)}</div><div className="kpi-hint">Coût selon votre offre Brave (grille modifiable dans Paramètres)</div></div>
             </div>
             <section className="card card-pad">
               <div className="card-title" style={{ marginBottom: 12 }}>Coût Claude par jour (30 j)</div>

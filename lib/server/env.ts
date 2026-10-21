@@ -3,6 +3,7 @@
  * Aucune de ces valeurs n'est jamais envoyée au navigateur : seul l'état
  * « configuré / non configuré » est exposé à l'interface.
  */
+import 'server-only'; // empêche toute importation accidentelle côté navigateur (erreur de build)
 
 export const env = {
   adminEmail: () => (process.env.ADMIN_EMAIL ?? '').trim().toLowerCase(),

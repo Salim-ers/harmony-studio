@@ -22,7 +22,7 @@ export const REACT_DEPENDENCIES = {
 export const REACT_DEV_DEPENDENCIES = { vite: '7.3.7', '@vitejs/plugin-react': '5.2.0' };
 export const ALLOWED_IMPORTS = ['react', 'react-dom', 'react-dom/client', 'react/jsx-runtime', 'react-router-dom', 'motion/react', 'lucide-react'];
 /** Fichiers du kit que l'IA ne doit jamais remplacer. */
-export const KIT_LOCKED = ['src/App.jsx', 'src/main.jsx', 'src/styles/kit.css', 'src/components/Kit.jsx', 'vite.config.js'];
+export const KIT_LOCKED = ['src/App.jsx', 'src/main.jsx', 'src/styles/kit.css', 'src/components/Kit.jsx', 'vite.config.js', 'vercel.json', 'index.html'];
 
 let kitCache: GenFile[] | null = null;
 export function kitDir() {
@@ -64,10 +64,11 @@ export function routesFromPlan(plan: Plan): RoutePlan[] {
 
 export function assembleReactProject(p: { plan: Plan; files: Record<string, string>; brief: BriefData; projectName: string; motion: string }): Record<string, string> {
   const files = { ...p.files };
-  for (const kit of loadKit()) {
-    if (KIT_LOCKED.includes(kit.path) || !(kit.path in files)) files[kit.path] = kit.content;
-  }
-  const routes = routesFromPlan(p.plan).filter((r) => r.file in files);
+  // Tous les fichiers du kit sont réimposés à chaque assemblage : une version antérieure ou une réponse
+  // de Claude ne peut pas remplacer la configuration de build (vite.config.js, vercel.json…).
+  for (const kit of loadKit()) files[kit.path] = kit.content;
+  for (const path of Object.keys(files)) if (/^(postcss|tailwind|babel)\.config\.|^\.(postcssrc|babelrc)/i.test(path)) delete files[path];
+  const routes = routesFromPlan(p.plan).filter((r) => Object.hasOwn(files, r.file));
   files['src/routes.js'] = `// Généré par Harmony Studio à partir du plan validé.\n${routes.map((r) => `import ${r.component} from './pages/${r.component}.jsx';`).join('\n')}\n\nexport const routes = [\n${routes.map((r) => `  { path: '${r.path}', label: ${JSON.stringify(r.title)}, Component: ${r.component} },`).join('\n')}\n];\n`;
   files['src/routes.paths.js'] = `// Chemins des pages (utilisé par vite.config.js pour le sitemap).\nexport const routes = ${JSON.stringify(routes.map((r) => r.path))};\n`;
   const name = p.brief.clientName || p.projectName;
@@ -104,7 +105,7 @@ export async function bundleReact(files: Record<string, string>): Promise<Bundle
   const resolveIn = (from: string, spec: string) => {
     const base = posix.normalize(posix.join(posix.dirname(from), spec));
     const candidates = [base, `${base}.js`, `${base}.jsx`, `${base}/index.js`, `${base}/index.jsx`];
-    return candidates.find((c) => c in files) ?? null;
+    return candidates.find((c) => Object.hasOwn(files, c)) ?? null;
   };
   const loaderFor = (path: string) => (path.endsWith('.css') ? 'css' : path.endsWith('.json') ? 'json' : path.endsWith('.jsx') ? 'jsx' : 'js') as 'css' | 'json' | 'jsx' | 'js';
   try {
@@ -137,7 +138,7 @@ export async function bundleReact(files: Record<string, string>): Promise<Bundle
             return { errors: [{ text: `Dépendance non autorisée : « ${args.path} » (autorisées : ${ALLOWED_IMPORTS.join(', ')})` }] };
           });
           build.onLoad({ filter: /.*/, namespace: 'virtual' }, (args) => {
-            if (!(args.path in files)) return { errors: [{ text: `Fichier absent : ${args.path}` }] };
+            if (!Object.hasOwn(files, args.path)) return { errors: [{ text: `Fichier absent : ${args.path}` }] };
             return { contents: files[args.path], loader: loaderFor(args.path), resolveDir: process.cwd() };
           });
         },

@@ -9,7 +9,7 @@ export function mockBraveResults(query: string): RawResult[] {
   const q = query.toLowerCase();
   const day = 24 * 3600 * 1000;
   const iso = (d: number) => new Date(Date.now() - d * day).toISOString();
-  if (q.includes('pagesjaunes') || q.includes('boulangerie') || q.includes('horaires')) {
+  if (['pagesjaunes', 'boulang', 'pâtiss', 'horaires'].some((t) => q.includes(t))) {
     return [
       { title: '[SIMULATION] Boulangerie du Marché - Creil - PagesJaunes', url: 'https://example.org/simulation/pagesjaunes/boulangerie-du-marche', description: 'Boulangerie artisanale à Creil (60100). Horaires, téléphone : 03 44 00 00 00.', age: '', pageAge: '' },
       { title: '[SIMULATION] Les 10 meilleures boulangeries à Creil', url: 'https://example.org/simulation/top-10-boulangeries', description: 'Classement des meilleures boulangeries de Creil.', age: '' },

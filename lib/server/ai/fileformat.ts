@@ -12,7 +12,25 @@ export type GenFile = { path: string; content: string };
 const STATIC_EXT = ['html', 'css', 'js', 'xml', 'txt', 'svg', 'json', 'webmanifest', 'md'];
 const REACT_EXT = ['html', 'css', 'js', 'jsx', 'json', 'svg', 'md', 'txt', 'xml'];
 const APP_EXT = [...STATIC_EXT, 'ts', 'tsx', 'mjs', 'cjs', 'sql', 'yml', 'yaml', 'example', 'gitignore', 'local-example', 'prisma'];
-const FORBIDDEN_NAMES = new Set(['.env', '.env.local', '.env.production', '.npmrc', 'id_rsa']);
+const FORBIDDEN_NAMES = new Set(['.env', '.env.local', '.env.production', '.env.development', '.npmrc', '.yarnrc', '.yarnrc.yml', '.pnpmfile.cjs', '.gitattributes', '.gitmodules', 'id_rsa']);
+/**
+ * Dossiers interprétés automatiquement par des outils tiers (CI GitHub, hooks Git, tâches VS Code…) :
+ * un fichier généré à cet endroit pourrait s'exécuter avec d'autres droits que ceux du projet. Jamais acceptés.
+ */
+export const FORBIDDEN_DIRS = new Set(['.github', '.husky', '.vscode', '.idea', '.devcontainer', '.circleci', '.gitlab', '.vercel', '.git', 'node_modules']);
+/** Fichiers de configuration exécutés par l'outillage de build ou l'hébergeur : interdits dans un site statique généré. */
+const SITE_EXECUTABLE_CONFIG = /^(package(-lock)?\.json|vercel\.json|netlify\.toml|tsconfig\.json|jsconfig\.json|\.babelrc.*|\.postcssrc.*|.*\.config\.[cm]?[jt]sx?)$/i;
+/**
+ * Site React : liste FERMÉE des chemins que Claude peut écrire. Le reste (vite.config.js, vercel.json,
+ * package.json, index.html, kit, postcss.config.js…) est fourni et verrouillé par Harmony Studio.
+ */
+const REACT_ALLOWED = /^(src\/(pages|components|sections|data|hooks|lib)\/[A-Za-z0-9_-]+\.jsx?|src\/site\.config\.js|src\/styles\/([A-Za-z0-9_-]+\/)?[A-Za-z0-9_-]+\.css|public\/[A-Za-z0-9_-]+\.(svg|txt|webmanifest|xml))$/;
+
+/** Vrai si le chemin traverse un dossier interprété par un outil tiers (CI, hooks, IDE). */
+export function isForbiddenLocation(path: string) {
+  const segments = path.split('/');
+  return segments.some((s) => FORBIDDEN_DIRS.has(s)) || FORBIDDEN_NAMES.has(segments[segments.length - 1]);
+}
 export const MAX_FILE_BYTES = 400_000;
 export const MAX_FILES = 220;
 
@@ -24,9 +42,10 @@ export function safePath(raw: string, kind: ProjectKind): string | null {
   if (!/^[A-Za-z0-9._\-/()[\]@]+$/.test(p)) return null;
   const segments = p.split('/');
   if (segments.length > 8 || segments.some((s) => !s || s === '.' || s === '..')) return null;
-  if (segments.includes('node_modules') || segments.includes('.git')) return null;
+  if (isForbiddenLocation(p)) return null;
   const name = segments[segments.length - 1];
-  if (FORBIDDEN_NAMES.has(name)) return null;
+  if (kind === 'react' && !REACT_ALLOWED.test(p)) return null;
+  if (kind === 'static' && SITE_EXECUTABLE_CONFIG.test(name)) return null;
   if (kind === 'static' && segments[0] === 'images' && !name.endsWith('.svg')) return null;
   if (kind === 'react' && (segments[0] === 'images' || (segments[0] === 'public' && segments[1] === 'images'))) return null;
   const ext = name.includes('.') ? name.split('.').pop()!.toLowerCase() : '';

@@ -2,7 +2,7 @@ import { defineConfig } from 'vitest/config';
 import { resolve } from 'node:path';
 
 export default defineConfig({
-  resolve: { alias: { '@': resolve(__dirname, '.') } },
+  resolve: { alias: { '@': resolve(__dirname, '.'), 'server-only': resolve(__dirname, 'node_modules/server-only/empty.js') } },
   test: {
     environment: 'node',
     testTimeout: 60_000,

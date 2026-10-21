@@ -8,7 +8,7 @@ import { audit } from '@/lib/server/audit';
 
 export const dynamic = 'force-dynamic';
 type P = { kind: string };
-const kindOf = (k: string) => { if (!(k in MATRIX_KINDS)) throw badRequest('Matrice inconnue.'); return k as MatrixKind; };
+const kindOf = (k: string) => { if (!Object.hasOwn(MATRIX_KINDS, k)) throw badRequest('Matrice inconnue.'); return k as MatrixKind; };
 
 export const GET = adminRoute<P>(async ({ request, params }) => {
   const kind = kindOf(params.kind);

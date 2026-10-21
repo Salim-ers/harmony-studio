@@ -24,12 +24,13 @@ import { db } from '@/lib/server/db';
 type Snap = { id: string; status: string; steps: { key: string; status: string; detail: string }[]; plan?: unknown; error: string };
 type ProjectDetail = { project: { status: string; current_version_id: string }; versions: { id: string; number: number }[]; current: { checks: { counts: Record<string, number> }; has_bundle: boolean } | null; assets: { slug: string; media_id: string }[] };
 
-async function upload(buf: Buffer, name: string, mime: string) {
+type UploadResult = { status: number; id: string; width: number; error?: string };
+async function upload(buf: Buffer, name: string, mime: string): Promise<UploadResult> {
   const init = await body<{ id: string; parts: number; chunkBytes: number; error?: string }>(await initUpload(req('/api/media/uploads', { json: { name, size: buf.length, mime } }), ctx()));
-  if (!init.id) return { error: init.error };
+  if (!init.id) return { status: 400, id: '', width: 0, error: init.error };
   for (let i = 0; i < init.parts; i++) {
     const part = buf.subarray(i * init.chunkBytes, (i + 1) * init.chunkBytes);
-    const r = await putPart(req(`/api/media/uploads/${init.id}/${i}`, { method: 'PUT', body: part, headers: { 'content-type': 'application/octet-stream', 'content-length': String(part.length) } }), ctx({ id: init.id, part: String(i) }));
+    const r = await putPart(req(`/api/media/uploads/${init.id}/${i}`, { method: 'PUT', body: new Uint8Array(part), headers: { 'content-type': 'application/octet-stream', 'content-length': String(part.length) } }), ctx({ id: init.id, part: String(i) }));
     expect(r.status).toBe(200);
   }
   const done = await complete(req(`/api/media/uploads/${init.id}/complete`, { method: 'POST' }), ctx({ id: init.id }));
@@ -74,6 +75,10 @@ describe('Création IA de bout en bout (Claude simulé, base réelle)', () => {
     expect(Buffer.from(await original.arrayBuffer()).equals(jpeg)).toBe(true); // original intact
     const fake = await upload(Buffer.concat([Buffer.from('MZ'), Buffer.alloc(2000)]), 'virus.jpg', 'image/jpeg');
     expect(fake.status).toBe(400);
+    const huge = await sharp({ create: { width: 9000, height: 8000, channels: 3, background: { r: 10, g: 10, b: 10 } } }).jpeg({ quality: 50 }).toBuffer();
+    const tooBig = await upload(huge, 'capteur-200mpx.jpg', 'image/jpeg');
+    expect(tooBig.status).toBe(400);
+    expect(tooBig.error).toContain('mégapixels');
     const svgInit = await initUpload(req('/api/media/uploads', { json: { name: 'x.svg', size: 100, mime: 'image/svg+xml' } }), ctx());
     expect(svgInit.status).toBe(400);
     const anonymous = await (async () => { const saved = new Map(jar); jar.clear(); const r = await getMedia(req(`/api/media/${photoId}/web`), ctx({ id: photoId, variant: 'web' })); for (const [k, v] of saved) jar.set(k, v); return r.status; })();
@@ -113,6 +118,13 @@ describe('Création IA de bout en bout (Claude simulé, base réelle)', () => {
     expect(img.headers.get('content-type')).toBe('image/webp');
     const bad = await preview(new Request(`http://localhost:3000/apercu/x.y/`), { params: Promise.resolve({ token: 'x.y', path: [] }) });
     expect(bad.status).toBe(404);
+    const malformed = await preview(new Request(`http://localhost:3000/apercu/${token}/%E0%A4%A`), { params: Promise.resolve({ token, path: ['%E0%A4%A'] }) });
+    expect(malformed.status).toBe(404); // URI invalide : 404 propre, pas d'erreur 500
+    // Audit L1 : le jeton d'aperçu meurt avec la session qui l'a émis
+    await db()`UPDATE admin_sessions SET revoked_at = now() WHERE revoked_at IS NULL`;
+    const revoked = await preview(new Request(`http://localhost:3000/apercu/${token}/`), { params: Promise.resolve({ token, path: [] }) });
+    expect(revoked.status).toBe(404);
+    jar.clear();
     await login(req('/api/auth/login', { json: { email: 'salim@harmony.test', password: 'MotDePasse-Tres-Solide-2026' } }));
   });
 

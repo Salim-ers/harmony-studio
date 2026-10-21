@@ -224,6 +224,7 @@ export function reactSystemAddendum(motion: string) {
 === RENDU REACT (prioritaire sur les consignes HTML statique) ===
 Le site est un projet React 19 (Vite, React Router, Motion) déployé sur Vercel. Intensité du motion design demandée : « ${motion} ».
 Motion design fort mais maîtrisé : hero spectaculaire (TextReveal, ParallaxImage, Magnetic), sections qui apparaissent (Reveal/Stagger), cartes interactives (TiltCard), rythme visuel varié. Jamais au détriment de la lisibilité ; le kit gère prefers-reduced-motion.
+Chemins que tu peux écrire (tout autre fichier est refusé automatiquement) : src/pages/*.jsx, src/components/*.jsx, src/sections/*.jsx, src/data/*.js, src/hooks/*.js, src/lib/*.js, src/site.config.js, src/styles/*.css, src/styles/pages/*.css, public/*.svg. La configuration (package.json, vite.config.js, vercel.json, index.html, src/main.jsx, src/App.jsx, src/motion/) est fournie par Harmony Studio : ne la produis pas.
 ${KIT_API_DOC}`;
 }
 

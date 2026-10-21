@@ -71,7 +71,8 @@ export const DEFAULT_CONFIG: AppConfig = {
   ai: { planModel: DEFAULT_MODEL, generationModel: DEFAULT_MODEL, maxOutputTokens: 32000, monthlyBudgetUsd: 50, jobBudgetUsd: 5, maxConcurrentJobs: 2, autoFixAttempts: 1 },
   pricing: DEFAULT_PRICING,
   pricingNote: 'Tarifs API Anthropic relevés le 21/10/2026 (USD / million de tokens). Vérifiez-les régulièrement.',
-  brave: { costPer1000Usd: null, monthlyQueryCap: 1500 },
+  // Brave Search : offre gratuite supprimée en février 2026 ; ≈ 5 $ / 1 000 requêtes avec 5 $ de crédit mensuel (à confirmer dans votre tableau de bord Brave).
+  brave: { costPer1000Usd: 5, monthlyQueryCap: 1000 },
   prospecting: { preferredZones: ['Rantigny', 'Creil', 'Nogent-sur-Oise', 'Clermont', 'Saint-Maximin', 'Oise'], retentionMonths: 36, defaultFreshness: 'pm' },
   // Tarifs de RÉFÉRENCE indicatifs (prompt maître + plaquette Harmony Solutions). Ce ne sont pas des offres fermes.
   catalog: [

@@ -27,6 +27,9 @@ describe('Protection SSRF', () => {
   it('identifie les adresses privées et réservées', () => {
     for (const ip of ['127.0.0.1', '10.0.0.4', '172.16.5.1', '192.168.1.1', '169.254.169.254', '0.0.0.0', '::1', 'fd00::1', '::ffff:127.0.0.1', '100.64.0.1']) expect(isPrivateIp(ip)).toBe(true);
     for (const ip of ['8.8.8.8', '151.101.1.1', '2a00:1450:4007::1']) expect(isPrivateIp(ip)).toBe(false);
+    // Contournements par écritures alternatives (audit indépendant, M1)
+    for (const ip of ['::ffff:7f00:1', '::ffff:a9fe:a9fe', '0:0:0:0:0:ffff:127.0.0.1', '::127.0.0.1', '64:ff9b::a9fe:a9fe', '2002:7f00:1::', 'fe80::1%eth0'.split('%')[0], 'not-an-ip']) expect(isPrivateIp(ip)).toBe(true);
+    for (const raw of ['http://[::ffff:127.0.0.1]/', 'http://[::ffff:169.254.169.254]/latest/meta-data', 'http://[::ffff:a9fe:a9fe]/', 'http://[0:0:0:0:0:ffff:7f00:1]/']) expect(() => assertPublicUrl(raw)).toThrow();
   });
   it('refuse les schémas, ports et hôtes internes', () => {
     expect(() => assertPublicUrl('file:///etc/passwd')).toThrow();
@@ -40,8 +43,9 @@ describe('Protection SSRF', () => {
 
 describe('Jetons d’aperçu', () => {
   it('signe, vérifie, expire et résiste à la falsification', () => {
-    const t = signPreview('11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222');
-    expect(verifyPreview(t)).toEqual({ projectId: '11111111-1111-1111-1111-111111111111', versionId: '22222222-2222-2222-2222-222222222222' });
+    const t = signPreview('11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', '33333333-3333-3333-3333-333333333333');
+    expect(verifyPreview(t)).toEqual({ projectId: '11111111-1111-1111-1111-111111111111', versionId: '22222222-2222-2222-2222-222222222222', sessionId: '33333333-3333-3333-3333-333333333333' });
+    expect(verifyPreview(t, Date.now() + 31 * 60 * 1000)).toBeNull(); // 30 min maximum
     const [payload, sig] = t.split('.');
     const forged = Buffer.from(JSON.stringify({ p: '33333333-3333-3333-3333-333333333333', v: 'x', e: 9e12 })).toString('base64url');
     expect(verifyPreview(`${forged}.${sig}`)).toBeNull();
@@ -56,6 +60,14 @@ describe('Fichiers générés par l’IA (non fiables)', () => {
     expect(safePath('assets/css/styles.css', 'static')).toBe('assets/css/styles.css');
     expect(safePath('src/pages/AccueilPage.jsx', 'react')).toBe('src/pages/AccueilPage.jsx');
     expect(safePath('public/images/x.webp', 'react')).toBeNull();
+    // Audit indépendant M3 : fichiers interprétés par la CI, l'hébergeur ou l'outillage de build
+    for (const p of ['vercel.json', 'vite.config.js', 'postcss.config.js', 'package.json', 'index.html', 'src/motion/Reveal.jsx', '.github/workflows/x.yml', 'src/main.jsx', 'eslint.config.mjs'])
+      expect(safePath(p, 'react'), p).toBeNull();
+    for (const p of ['src/site.config.js', 'src/styles/theme.css', 'src/styles/pages/accueil.css', 'src/components/Layout.jsx', 'src/data/menu.js', 'public/favicon.svg'])
+      expect(safePath(p, 'react'), p).toBe(p);
+    for (const p of ['vercel.json', 'package.json', 'netlify.toml', 'tailwind.config.js', '.github/workflows/deploy.yml']) expect(safePath(p, 'static'), p).toBeNull();
+    for (const p of ['.github/workflows/ci.yml', '.husky/pre-commit', '.vscode/tasks.json', '.yarnrc.yml']) expect(safePath(p, 'app'), p).toBeNull();
+    expect(safePath('next.config.mjs', 'app')).toBe('next.config.mjs'); // une application Next.js a besoin de sa configuration (construite dans le runner isolé)
     expect(safePath('src/pages/A.jsx', 'static')).toBeNull();
   });
   it('détecte une sortie tronquée et ignore les blocs markdown', () => {
@@ -81,5 +93,6 @@ describe('Journalisation sans secret', () => {
   it('masque clés et chaînes de connexion', () => {
     const out = redact('err sk-ant-api03-abcdef123456 postgresql://u:p@h/db ghp_aaaaaaaaaaaaaaaaaaaaaaaa Bearer abc.def');
     expect(out).not.toMatch(/sk-ant-api03-abc|postgresql:\/\/u|ghp_a|Bearer abc/);
+    expect(redact(`hash scrypt:${'a'.repeat(32)}:${'b'.repeat(16)} et scrypt2:16384:8:5:${'c'.repeat(32)}:${'d'.repeat(16)}`)).not.toMatch(/aaaa|bbbb|cccc|dddd/);
   });
 });

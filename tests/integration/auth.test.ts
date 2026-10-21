@@ -35,6 +35,60 @@ describe('Authentification et sessions', () => {
     expect((await login(req('/api/auth/login', { json: good }))).status).toBe(429);
   });
 
+  it('une attaque distribuée ne peut pas bloquer le propriétaire qui a activé la 2FA', async () => {
+    const secret = base32Encode(Buffer.from('0123456789abcdef0123'));
+    process.env.ADMIN_TOTP_SECRET = secret;
+    const fromIp = (ip: string, json: unknown) => { const r = req('/api/auth/login', { json }); r.headers.set('x-forwarded-for', ip); return login(r); };
+    // 40 échecs depuis 8 IP différentes → verrouillage global
+    for (let n = 0; n < 8; n++) for (let i = 0; i < 5; i++) await fromIp(`198.51.100.${n}`, { ...good, password: `x${i}` });
+    const [gl] = await db()<{ count: number }>`SELECT count FROM rate_limits WHERE bucket = 'loginGlobal'`;
+    expect(Number(gl.count)).toBe(40);
+    // Pendant le verrouillage : bon mot de passe sans code → réponse identique à un mauvais mot de passe
+    const noCode = await fromIp('192.0.2.50', good);
+    const badPwd = await fromIp('192.0.2.51', { ...good, password: 'faux', code: '000000' });
+    expect(noCode.status).toBe(401);
+    expect((await body(noCode)).error).toBe((await body(badPwd)).error);
+    // … mais le propriétaire avec mot de passe + code valide entre quand même
+    const ok = await fromIp('192.0.2.52', { ...good, code: totpAt(secret, Math.floor(Date.now() / 30000)) });
+    expect(ok.status).toBe(200);
+    expect((await db()`SELECT 1 FROM notifications WHERE kind = 'securite'`).length).toBeGreaterThan(0);
+  });
+
+  it('sans 2FA, le verrouillage global suspend la connexion (documenté)', async () => {
+    await db()`INSERT INTO rate_limits(bucket, key_hash, window_start, count)
+      VALUES ('loginGlobal', ${(await import('@/lib/server/ratelimit')).hashKey('global')}, to_timestamp(floor(extract(epoch from now()) / 3600) * 3600), 40)`;
+    expect((await login(req('/api/auth/login', { json: good }))).status).toBe(429);
+  });
+
+  it('une connexion réussie ne consomme pas le seau global', async () => {
+    for (let i = 0; i < 3; i++) { jar.clear(); expect((await login(req('/api/auth/login', { json: good }))).status).toBe(200); }
+    expect((await db()`SELECT 1 FROM rate_limits WHERE bucket = 'loginGlobal'`).length).toBe(0);
+  });
+
+  it('hash scrypt renforcé (scrypt2) et compatibilité des hash V1', async () => {
+    const { scryptSync } = await import('node:crypto');
+    const { execFileSync } = await import('node:child_process');
+    const saved = process.env.ADMIN_PASSWORD_HASH;
+    try {
+      expect(saved).toMatch(/^scrypt2:16384:8:5:[a-f0-9]{32}:[a-f0-9]{128}$/);
+      // Hash au format V1 (scrypt:sel:hash, paramètres par défaut) : toujours accepté
+      const salt = 'a'.repeat(32);
+      process.env.ADMIN_PASSWORD_HASH = `scrypt:${salt}:${scryptSync(good.password, salt, 64).toString('hex')}`;
+      expect((await login(req('/api/auth/login', { json: good }))).status).toBe(200);
+      // Hash produit par « npm run hash-password »
+      const out = execFileSync('node', ['scripts/hash-password.mjs'], { input: `${good.password}\n`, encoding: 'utf8' });
+      process.env.ADMIN_PASSWORD_HASH = out.match(/ADMIN_PASSWORD_HASH=(\S+)/)![1];
+      jar.clear();
+      expect((await login(req('/api/auth/login', { json: good }))).status).toBe(200);
+      // Paramètres hors bornes (configuration erronée) : refusé sans calcul démesuré
+      process.env.ADMIN_PASSWORD_HASH = `scrypt2:1048576:8:1:${salt}:${'0'.repeat(128)}`;
+      jar.clear();
+      expect((await login(req('/api/auth/login', { json: good }))).status).toBe(401);
+    } finally {
+      process.env.ADMIN_PASSWORD_HASH = saved;
+    }
+  });
+
   it('refuse une connexion sans en-tête Origin (CSRF)', async () => {
     expect((await login(req('/api/auth/login', { json: good, origin: null }))).status).toBe(403);
     expect((await login(req('/api/auth/login', { json: good, origin: 'https://attaquant.example' }))).status).toBe(403);

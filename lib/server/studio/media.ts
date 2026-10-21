@@ -77,11 +77,16 @@ async function writeVariant(id: string, variant: Variant, buf: Buffer, mime: str
     ON CONFLICT (media_id, variant) DO UPDATE SET mime = EXCLUDED.mime, size = EXCLUDED.size, width = EXCLUDED.width, height = EXCLUDED.height, chunks = EXCLUDED.chunks`;
 }
 
+/** 64 Mpx : couvre les capteurs de 50 Mpx ; au-delà (modes 108/200 Mpx), le décodage serait trop gourmand en mémoire. */
+export const MAX_INPUT_PIXELS = 64_000_000;
+class TooManyPixelsError extends Error {}
+
 export async function processImage(buf: Buffer) {
-  const image = sharp(buf, { limitInputPixels: 120_000_000, failOn: 'error' });
-  const meta = await image.metadata();
+  // metadata() lit seulement l'en-tête (aucun décodage) : on peut contrôler la taille avant toute allocation.
+  const meta = await sharp(buf, { limitInputPixels: false, failOn: 'error' }).metadata();
   if (!meta.width || !meta.height) throw badRequest('Image illisible.');
-  const rotated = () => sharp(buf, { limitInputPixels: 120_000_000 }).rotate();
+  if (meta.width * meta.height > MAX_INPUT_PIXELS) throw new TooManyPixelsError();
+  const rotated = () => sharp(buf, { limitInputPixels: MAX_INPUT_PIXELS }).rotate();
   const web = await rotated().resize({ width: 2400, height: 2400, fit: 'inside', withoutEnlargement: true }).webp({ quality: 84, alphaQuality: 100, effort: 4 }).toBuffer({ resolveWithObject: true });
   const ai = meta.hasAlpha
     ? await rotated().resize({ width: 1568, height: 1568, fit: 'inside', withoutEnlargement: true }).png({ compressionLevel: 9 }).toBuffer({ resolveWithObject: true })
@@ -108,12 +113,17 @@ export async function completeUpload(id: string) {
   const sha = createHash('sha256').update(buf).digest('hex');
   let width: number | null = null, height: number | null = null;
   if (real === 'application/pdf') {
+    // Filtre INDICATIF (un PDF peut masquer ces mots-clés par encodage ou compression) : la vraie protection est
+    // que les PDF ne sont jamais rendus dans le Studio (téléchargement forcé, CSP sandbox) ni transmis tels quels aux sites.
     if (/\/(JavaScript|JS|Launch|EmbeddedFile)\b/.test(buf.toString('latin1'))) return reject('PDF refusé : il contient du JavaScript, une action de lancement ou un fichier embarqué.');
     await writeVariant(id, 'original', buf, real, null, null);
     await writeVariant(id, 'ai', buf, real, null, null);
   } else {
     let processed;
-    try { processed = await processImage(buf); } catch { return reject('Image corrompue ou non décodable.'); }
+    try { processed = await processImage(buf); } catch (e) {
+      if (e instanceof TooManyPixelsError) return reject(`Résolution trop élevée (plus de ${MAX_INPUT_PIXELS / 1_000_000} mégapixels) : exportez la photo en résolution standard (12 à 50 Mpx), puis renvoyez-la.`);
+      return reject('Image corrompue ou non décodable.');
+    }
     const { meta, web, ai, aiMime, thumb } = processed;
     const swap = (meta.orientation ?? 1) >= 5;
     width = (swap ? meta.height : meta.width) ?? null;

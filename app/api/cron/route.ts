@@ -7,7 +7,8 @@
 import { timingSafeEqual } from 'node:crypto';
 import { db } from '@/lib/server/db';
 import { env } from '@/lib/server/env';
-import { logError } from '@/lib/server/http';
+import { HttpError, logError } from '@/lib/server/http';
+import { notify } from '@/lib/server/audit';
 import { runSearch } from '@/lib/server/prospects/engine';
 import { getConfig } from '@/lib/server/settings';
 
@@ -34,14 +35,27 @@ export async function GET(request: Request) {
   try {
     const profiles = await sql`SELECT * FROM search_profiles WHERE schedule_enabled AND ${day} = ANY(schedule_days)
       AND (last_run_at IS NULL OR last_run_at < now() - interval '20 hours')`;
+    // Une veille en échec (quota Brave atteint, clé absente…) n'empêche ni les autres veilles ni le nettoyage.
+    let quotaReached = false;
+    const safeRun = async (...args: Parameters<typeof runSearch>) => {
+      if (quotaReached) return;
+      try {
+        runs.push(await runSearch(...args));
+      } catch (e) {
+        if (e instanceof HttpError && e.code === 'QUOTA') {
+          quotaReached = true;
+          await notify('quota', 'Veille suspendue : plafond Brave atteint', e.message, '/parametres');
+        } else logError('cron:veille', e);
+      }
+    };
     for (const p of profiles) {
       if (hourly && p.schedule_hour !== hour) continue;
-      runs.push(await runSearch({ strategy: p.strategy, zones: p.zones, sectors: p.sectors, needs: p.needs, customQuery: p.custom_query, freshness: p.freshness, maxQueries: p.max_queries },
-        { trigger: 'planifié', profileId: p.id, alertMinScore: p.alert_min_score }));
+      await safeRun({ strategy: p.strategy, zones: p.zones, sectors: p.sectors, needs: p.needs, customQuery: p.custom_query, freshness: p.freshness, maxQueries: p.max_queries },
+        { trigger: 'planifié', profileId: p.id, alertMinScore: p.alert_min_score });
     }
     const config = await getConfig();
     if (config.legacy.watch_enabled && (!hourly || hour === 7)) {
-      runs.push(await runSearch({ strategy: 'explicite', zones: [config.legacy.watch_city || 'Oise'], sectors: [], needs: [], customQuery: '', freshness: 'pw', maxQueries: 4 }, { trigger: 'planifié' }));
+      await safeRun({ strategy: 'explicite', zones: [config.legacy.watch_city || 'Oise'], sectors: [], needs: [], customQuery: '', freshness: 'pw', maxQueries: 4 }, { trigger: 'planifié' });
     }
     const [{ n }] = await sql<{ n: number }>`SELECT count(*)::int AS n FROM prospects WHERE status <> 'Gagné' AND last_activity_at < now() - make_interval(months => ${config.prospecting.retentionMonths})`;
     if (Number(n) > 0 && day === 1) await sql`INSERT INTO notifications(kind, title, body, link) VALUES ('rgpd', 'Durée de conservation dépassée', ${`${n} fiche(s) prospect sans activité depuis plus de ${config.prospecting.retentionMonths} mois.`}, '/parametres?onglet=prospection')`;

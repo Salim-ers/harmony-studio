@@ -125,6 +125,19 @@ describe('Prospection, CRM et devis (base réelle, Brave simulé)', () => {
     expect(r.status).toBe(201);
   });
 
+  it('plafond mensuel Brave appliqué à tous les déclencheurs (manuel, enregistré, planifié)', async () => {
+    await db()`INSERT INTO usage_events(provider, operation, units, ok, is_demo) SELECT 'brave', 'web_search', 1, true, false FROM generate_series(1, 1000)`;
+    try {
+      const manual = await search(req('/api/prospects/search', { json: { strategy: 'explicite', zones: ['Oise'], needs: ['site'], maxQueries: 2 } }), ctx());
+      expect(manual.status).toBe(429);
+      const { runSearch } = await import('@/lib/server/prospects/engine');
+      await expect(runSearch({ strategy: 'explicite', zones: ['Oise'], sectors: [], needs: [], customQuery: '', freshness: 'pw', maxQueries: 2 }, { trigger: 'planifié' }))
+        .rejects.toMatchObject({ status: 429, code: 'QUOTA' });
+    } finally {
+      await db()`DELETE FROM usage_events WHERE provider = 'brave' AND NOT is_demo`;
+    }
+  });
+
   it('suppression définitive (droit à l’effacement) en cascade', async () => {
     const r = await body<{ id: string }>(await create(req('/api/prospects', { json: { name: 'À effacer', notes: 'note' } }), ctx()));
     expect((await DELETE(req(`/api/prospects/${r.id}`, { method: 'DELETE' }), ctx({ id: r.id }))).status).toBe(200);

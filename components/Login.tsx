@@ -44,7 +44,7 @@ export default function Login({ totp, next, configError }: { totp: boolean; next
       <section className="login-panel">
         <form className="login-card stack" onSubmit={submit} noValidate>
           <div className="kpi-icon" style={{ width: 44, height: 44, borderRadius: 12 }}><LockKeyhole size={20} /></div>
-          <div><h2>Bienvenue, Salim.</h2><p className="muted">Connectez-vous à votre espace privé.</p></div>
+          <div><h2>Bienvenue.</h2><p className="muted">Connectez-vous à votre espace privé.</p></div>
           {error ? <div className="alert alert-error" role="alert">{error}</div> : null}
           <div className="field"><label htmlFor="email">Adresse e-mail</label><input id="email" className="input" type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
           <div className="field"><label htmlFor="password">Mot de passe</label><input id="password" className="input" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} /></div>

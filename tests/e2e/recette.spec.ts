@@ -37,7 +37,7 @@ test('sécurité : pages et API privées refusées sans session', async ({ page,
   watchConsole(page);
   await page.goto('/dashboard');
   await expect(page).toHaveURL(/\/\?suite=%2Fdashboard/);
-  await expect(page.getByRole('heading', { name: 'Bienvenue, Salim.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Bienvenue.' })).toBeVisible();
   expect((await request.get('/api/prospects')).status()).toBe(401);
   expect((await request.get('/api/projects')).status()).toBe(401);
   await shot(page, '01-connexion');
@@ -148,7 +148,7 @@ test('paramètres : matrices génériques, intégrations, aucun secret affiché'
   await page.goto('/parametres?onglet=ia');
   await expect(page.getByText('Abonnement Claude.ai ≠ API.')).toBeVisible();
   const html = await page.content();
-  expect(html).not.toMatch(/scrypt:|postgresql:\/\/|sk-ant-/);
+  expect(html).not.toMatch(/scrypt2?:|postgresql:\/\/|sk-ant-/);
 });
 
 test('aucune violation CSP ni erreur JavaScript pendant la recette', async () => {

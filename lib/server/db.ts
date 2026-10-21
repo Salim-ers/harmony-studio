@@ -7,6 +7,7 @@
  * Toutes les requêtes sont paramétrées : le template tag transforme chaque valeur
  * interpolée en paramètre `$n`, jamais en concaténation SQL.
  */
+import 'server-only'; // empêche toute importation accidentelle côté navigateur (erreur de build)
 import { neon } from '@neondatabase/serverless';
 import { Pool } from 'pg';
 

@@ -1,0 +1,433 @@
+MISSION : AUDIT FINAL PRODUCTION, SÉCURITÉ, PERFORMANCE ET FIABILITÉ
+
+Le projet est maintenant fonctionnel.
+
+À partir de maintenant, tu ne dois plus modifier la direction
+artistique, les fonctionnalités ou l'architecture fonctionnelle
+sans nécessité.
+
+Ton travail consiste à effectuer un audit professionnel du projet
+avant mise en production.
+
+OBJECTIF :
+
+Transformer le projet actuel en application production-ready,
+sécurisée, performante, maintenable et robuste, sans casser
+aucune fonctionnalité existante.
+
+==================================================
+1. PRINCIPE ABSOLU : NE RIEN CASSER
+==================================================
+
+Ne supprime aucune fonctionnalité existante.
+
+Ne modifie pas une fonctionnalité stable sans nécessité.
+
+Ne fais aucun refactoring massif simplement pour rendre le code
+plus élégant.
+
+Effectue uniquement les modifications réellement nécessaires.
+
+Avant toute modification importante :
+- rechercher tous les usages ;
+- vérifier les dépendances ;
+- vérifier les impacts potentiels.
+
+==================================================
+2. SECRETS ET VARIABLES D'ENVIRONNEMENT
+==================================================
+
+Auditer tout le repository.
+
+Rechercher :
+- clés API ;
+- mots de passe ;
+- tokens ;
+- secrets Stripe ;
+- clés Supabase ;
+- credentials SMTP ;
+- secrets JWT ;
+- credentials cloud.
+
+Aucun secret privé ne doit être accessible depuis le frontend.
+
+Déplacer les secrets dans les variables d'environnement serveur.
+
+Vérifier le .gitignore.
+
+==================================================
+3. AUTHENTIFICATION
+==================================================
+
+Auditer complètement :
+- login ;
+- logout ;
+- inscription ;
+- sessions ;
+- cookies ;
+- reset password ;
+- vérification email.
+
+Utiliser des sessions sécurisées.
+
+Appliquer Secure, HttpOnly et SameSite aux cookies lorsque pertinent.
+
+Prévoir expiration et invalidation des sessions.
+
+==================================================
+4. AUTORISATIONS
+==================================================
+
+Toutes les permissions doivent être contrôlées côté serveur.
+
+Ne jamais considérer l'interface utilisateur comme une barrière
+de sécurité.
+
+Vérifier chaque endpoint sensible.
+
+Empêcher tout IDOR.
+
+Un utilisateur ne doit jamais accéder aux ressources appartenant
+à un autre utilisateur en modifiant simplement un ID.
+
+==================================================
+5. DATABASE
+==================================================
+
+Auditer les accès à la base de données.
+
+Si Supabase :
+- activer RLS ;
+- vérifier toutes les policies ;
+- aucune table sensible publiquement accessible ;
+- service_role uniquement côté serveur.
+
+Vérifier :
+- indexes ;
+- contraintes ;
+- foreign keys ;
+- transactions ;
+- migrations.
+
+==================================================
+6. VALIDATION
+==================================================
+
+Toutes les entrées utilisateur doivent être validées côté serveur.
+
+Utiliser un système de validation structuré comme Zod si disponible.
+
+Valider :
+- formulaires ;
+- JSON ;
+- query parameters ;
+- IDs ;
+- uploads ;
+- webhooks.
+
+==================================================
+7. PROTECTION INJECTIONS
+==================================================
+
+Auditer :
+- SQL injection ;
+- XSS ;
+- command injection ;
+- path traversal ;
+- unsafe redirects ;
+- SSRF lorsque pertinent.
+
+Utiliser exclusivement des requêtes paramétrées.
+
+Éviter dangerouslySetInnerHTML.
+
+==================================================
+8. RATE LIMITING
+==================================================
+
+Implémenter du rate limiting sur les routes sensibles :
+
+- login ;
+- signup ;
+- reset password ;
+- formulaires publics ;
+- API IA ;
+- emails ;
+- recherche intensive ;
+- uploads ;
+- paiement.
+
+==================================================
+9. HEADERS DE SÉCURITÉ
+==================================================
+
+Configurer correctement :
+
+Content-Security-Policy
+Strict-Transport-Security
+X-Content-Type-Options
+Referrer-Policy
+Permissions-Policy
+protection clickjacking.
+
+==================================================
+10. UPLOADS
+==================================================
+
+Si uploads :
+
+- limiter la taille ;
+- vérifier extension ;
+- vérifier MIME ;
+- renommer les fichiers ;
+- empêcher l'exécution ;
+- utiliser stockage sécurisé ;
+- utiliser URL signées pour fichiers privés.
+
+==================================================
+11. WEBHOOKS
+==================================================
+
+Vérifier toutes les signatures cryptographiques des webhooks.
+
+Implémenter idempotency.
+
+Ne jamais accepter aveuglément les données reçues.
+
+==================================================
+12. PAIEMENTS
+==================================================
+
+Si Stripe ou autre paiement :
+
+Le montant doit être calculé côté serveur.
+
+Ne jamais faire confiance au montant envoyé par le navigateur.
+
+Vérifier les événements via webhook signé.
+
+Empêcher les doubles traitements.
+
+==================================================
+13. LOGS
+==================================================
+
+Supprimer les console.log inutiles.
+
+Ne jamais logger :
+- passwords ;
+- tokens ;
+- cookies ;
+- clés API ;
+- informations bancaires.
+
+Créer des logs structurés pour les erreurs importantes.
+
+==================================================
+14. ERROR HANDLING
+==================================================
+
+Les erreurs utilisateur doivent être génériques.
+
+Ne jamais révéler :
+- stack trace ;
+- structure DB ;
+- chemins serveur ;
+- secrets ;
+- configuration interne.
+
+Conserver les détails uniquement côté serveur.
+
+==================================================
+15. DÉPENDANCES
+==================================================
+
+Auditer package.json.
+
+Identifier :
+- dépendances inutilisées ;
+- packages obsolètes ;
+- vulnérabilités ;
+- doublons.
+
+Ne pas remplacer automatiquement les packages existants.
+
+Ne pas installer de nouvelles dépendances si elles ne sont
+pas réellement nécessaires.
+
+Conserver le lockfile.
+
+==================================================
+16. CODE MORT
+==================================================
+
+Identifier :
+- imports inutilisés ;
+- composants inutilisés ;
+- fonctions inutilisées ;
+- anciens fichiers ;
+- routes obsolètes ;
+- variables inutilisées.
+
+Supprimer uniquement après vérification certaine qu'ils
+ne sont utilisés nulle part.
+
+==================================================
+17. PERFORMANCE
+==================================================
+
+Auditer :
+- bundle JavaScript ;
+- images ;
+- fonts ;
+- API ;
+- requêtes DB ;
+- rendering.
+
+Optimiser les images.
+
+Utiliser lazy loading.
+
+Limiter le JavaScript client.
+
+Utiliser Server Components lorsque pertinent.
+
+==================================================
+18. DATABASE PERFORMANCE
+==================================================
+
+Identifier les requêtes lentes.
+
+Ajouter les indexes nécessaires.
+
+Éviter SELECT * inutile.
+
+Ajouter pagination sur les listes potentiellement importantes.
+
+Éviter les requêtes N+1.
+
+==================================================
+19. CACHE
+==================================================
+
+Utiliser intelligemment :
+- CDN ;
+- cache ;
+- ISR ;
+- revalidation.
+
+Ne jamais mettre en cache publiquement des données personnelles
+ou propres à un utilisateur.
+
+==================================================
+20. TESTS
+==================================================
+
+Créer ou vérifier les tests des fonctionnalités critiques.
+
+Tester notamment :
+
+- authentification ;
+- autorisations ;
+- CRUD principal ;
+- paiements ;
+- webhooks ;
+- formulaires ;
+- uploads.
+
+Si possible ajouter tests E2E Playwright.
+
+==================================================
+21. MONITORING
+==================================================
+
+Préparer une architecture permettant :
+- suivi erreurs ;
+- suivi performances ;
+- logs serveur ;
+- alertes.
+
+Compatible avec des solutions telles que Sentry.
+
+==================================================
+22. BACKUPS
+==================================================
+
+Prévoir une stratégie de sauvegarde de la base de données.
+
+Documenter la procédure de restauration.
+
+Aucune stratégie de backup ne doit être considérée valide
+sans procédure de restauration.
+
+==================================================
+23. HEALTH CHECK
+==================================================
+
+Ajouter si pertinent :
+
+/api/health
+
+Permettant de vérifier que l'application fonctionne.
+
+Ne jamais y exposer d'informations sensibles.
+
+==================================================
+24. DOCUMENTATION
+==================================================
+
+Créer ou compléter :
+
+README.md
+SECURITY.md
+DEPLOYMENT.md
+ENVIRONMENT.md
+BACKUP.md
+
+Documenter :
+- installation ;
+- variables d'environnement ;
+- architecture ;
+- déploiement ;
+- sauvegarde ;
+- restauration.
+
+Ne jamais documenter les valeurs réelles des secrets.
+
+==================================================
+25. AUDIT FINAL
+==================================================
+
+Avant de modifier quoi que ce soit, produire :
+
+1. CRITICAL
+2. HIGH
+3. MEDIUM
+4. LOW
+5. PERFORMANCE
+6. MAINTENANCE
+
+Pour chaque problème indiquer :
+
+- fichier concerné ;
+- problème ;
+- risque ;
+- correction proposée.
+
+Ensuite corriger les problèmes CRITICAL puis HIGH.
+
+Effectuer ensuite les optimisations sans casser
+le comportement existant.
+
+À la fin produire un rapport :
+
+SECURITY STATUS
+PERFORMANCE STATUS
+DEPENDENCIES STATUS
+DATABASE STATUS
+TEST STATUS
+BACKUP STATUS
+MONITORING STATUS
+PRODUCTION READINESS
+
+Et fournir la liste exacte des modifications effectuées.

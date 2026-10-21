@@ -1,16 +1,58 @@
 'use client';
 import { useState, type FormEvent } from 'react';
-import { ArrowRight, LockKeyhole, ShieldCheck, Sparkles } from 'lucide-react';
-export default function Login(){
-  const [email,setEmail]=useState(''),[password,setPassword]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState('');
-  async function submit(e:FormEvent){
-    e.preventDefault();setBusy(true);setError('');
-    try{const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});const j=await r.json();if(!r.ok)throw new Error(j.error);window.location.href='/dashboard'}
-    catch(e){setError(e instanceof Error?e.message:'Erreur de connexion')}finally{setBusy(false)}
+import { ArrowRight, KeyRound, Loader2, LockKeyhole, ShieldCheck } from 'lucide-react';
+import { api } from '@/lib/client/api';
+
+export default function Login({ totp, next, configError }: { totp: boolean; next: string; configError: string }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [code, setCode] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(configError);
+
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError('');
+    try {
+      await api('/api/auth/login', { json: { email, password, code } });
+      window.location.href = next;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Connexion impossible.');
+    } finally {
+      setBusy(false);
+    }
   }
-  return <main className="login-page"><div className="login-orb login-orb-one"/><div className="login-orb login-orb-two"/>
-    <div className="login-shell"><div className="login-brand"><div className="logo-mark">H<span>.</span></div><div><b>HARMONY</b><small>STUDIO / BY HARMONY SOLUTIONS</small></div></div>
-      <div className="login-grid"><section className="login-message"><span className="eyebrow light"><Sparkles size={14}/> TON ESPACE DE TRAVAIL</span><h1>Tout ton business.<br/><em>Un seul endroit.</em></h1><p>Détecte les opportunités, développe ton portefeuille client et donne vie à tes sites avec l'intelligence artificielle.</p><div className="login-facts"><span>01 / Prospection</span><span>02 / Création IA</span><span>03 / Gestion privée</span></div></section>
-      <section className="login-card"><div className="login-card-icon"><LockKeyhole size={22}/></div><div className="login-title">Bienvenue, Salim.</div><p>Accède à ton espace administrateur.</p><form onSubmit={submit}><label>ADRESSE E-MAIL</label><input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="admin@harmonysolutions.fr" required autoComplete="username"/><label>MOT DE PASSE</label><input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="••••••••••••" required autoComplete="current-password"/>{error&&<div className="form-error">{error}</div>}<button type="submit" className="btn primary full" disabled={busy}>{busy?'Vérification...':'Accéder à mon espace'}<ArrowRight size={17}/></button></form><div className="login-foot"><ShieldCheck size={15}/> Accès personnel et sécurisé</div></section></div>
-    <div className="login-copyright">© 2026 HARMONY SOLUTIONS — PRIVATE WORKSPACE</div></div></main>
+  const words = ['Trouvez', 'vos', 'clients.'];
+  return (
+    <main className="login">
+      <section className="login-art">
+        <div className="login-lines" />
+        <div className="brand" style={{ padding: 0 }}>
+          <div className="brand-mark" aria-hidden="true">H</div>
+          <div><div className="brand-name">HARMONY</div><div className="brand-sub">STUDIO · HARMONY SOLUTIONS</div></div>
+        </div>
+        <div>
+          <h1 className="login-title login-reveal">
+            {words.map((w, i) => <span key={w} style={{ animationDelay: `${0.1 + i * 0.12}s` }}>{w}&nbsp;</span>)}<br />
+            <span style={{ animationDelay: '.5s' }}><em>Créez</em>&nbsp;</span><span style={{ animationDelay: '.62s' }}>leurs&nbsp;</span><span style={{ animationDelay: '.74s' }}>sites.</span>
+          </h1>
+          <p style={{ color: '#aab6cc', maxWidth: 460, marginTop: 18, fontSize: 15 }}>Prospection sourcée et vérifiable, CRM, devis et création de sites premium avec Claude — dans un espace réservé à vous seul.</p>
+        </div>
+        <div className="row tiny" style={{ color: '#7f8ca6', gap: 18 }}><span>Des idées d’aujourd’hui pour vos projets de demain</span></div>
+      </section>
+      <section className="login-panel">
+        <form className="login-card stack" onSubmit={submit} noValidate>
+          <div className="kpi-icon" style={{ width: 44, height: 44, borderRadius: 12 }}><LockKeyhole size={20} /></div>
+          <div><h2>Bienvenue, Salim.</h2><p className="muted">Connectez-vous à votre espace privé.</p></div>
+          {error ? <div className="alert alert-error" role="alert">{error}</div> : null}
+          <div className="field"><label htmlFor="email">Adresse e-mail</label><input id="email" className="input" type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
+          <div className="field"><label htmlFor="password">Mot de passe</label><input id="password" className="input" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} /></div>
+          {totp ? <div className="field"><label htmlFor="code"><KeyRound size={14} />Code de double authentification</label><input id="code" className="input" inputMode="numeric" autoComplete="one-time-code" pattern="\d{6}" maxLength={6} required value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} /></div> : null}
+          <button className="btn btn-primary btn-lg btn-block" type="submit" disabled={busy}>{busy ? <Loader2 size={17} className="spin" /> : null}Accéder à mon espace<ArrowRight size={17} /></button>
+          <p className="tiny muted row" style={{ justifyContent: 'center' }}><ShieldCheck size={14} />Accès personnel — tentatives limitées et journalisées</p>
+        </form>
+      </section>
+    </main>
+  );
 }

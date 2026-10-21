@@ -1,5 +1,16 @@
-import { assertOrigin,clearSession,apiError } from '@/lib/auth';
-export async function POST(request:Request) {
-  try {assertOrigin(request); await clearSession(); return Response.json({ok:true});}
-  catch(e){return apiError(e)}
+import { destroySession } from '@/lib/server/auth';
+import { audit } from '@/lib/server/audit';
+import { assertSameOrigin, toResponse } from '@/lib/server/http';
+
+export const dynamic = 'force-dynamic';
+
+export async function POST(request: Request) {
+  try {
+    assertSameOrigin(request);
+    await destroySession();
+    await audit('deconnexion');
+    return Response.json({ ok: true }, { headers: { 'Cache-Control': 'no-store' } });
+  } catch (e) {
+    return toResponse(e, 'logout');
+  }
 }

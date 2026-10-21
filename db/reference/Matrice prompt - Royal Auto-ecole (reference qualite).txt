@@ -1,0 +1,621 @@
+Crée un site vitrine moderne, premium, dynamique et mémorable pour une auto-école française appelée Royal Auto-école, située à Brueil-le-Vert, dans l’Oise (60).
+
+L’objectif est de créer un site qui ne ressemble surtout pas à un site d’auto-école classique et vieillissant. Je veux une expérience moderne, rassurante, jeune, professionnelle et très visuelle, avec un véritable effet waouh dès l’arrivée sur la page d’accueil.
+
+Le site doit donner immédiatement envie de contacter l’auto-école et de s’inscrire.
+
+1. Direction artistique
+
+Construis une identité visuelle forte autour du nom ROYAL.
+
+Le style doit être :
+
+Premium mais accessible
+Moderne et jeune
+Dynamique
+Élégant
+Rassurant
+Automobile sans tomber dans les clichés
+Local et humain
+Très propre visuellement
+
+Évite absolument le rendu générique de template d’auto-école.
+
+Couleurs
+
+Créer une palette cohérente et élégante, par exemple :
+
+Noir profond / bleu nuit comme couleur principale
+Blanc cassé pour les fonds
+Une couleur accent dorée ou jaune électrique pour rappeler le côté « Royal »
+Quelques touches de gris métallisé
+
+Le doré doit être utilisé avec parcimonie afin de donner une sensation premium.
+
+Typographie
+
+Utiliser une typographie moderne, lisible et impactante.
+
+Les grands titres doivent être imposants, avec beaucoup de contraste.
+
+Exemple d'esprit :
+"PRENEZ LE VOLANT DE VOTRE LIBERTÉ."
+
+Le design doit utiliser beaucoup d'espace blanc, des grands visuels, des cartes avec des coins légèrement arrondis et des détails graphiques inspirés de l'univers automobile.
+
+2. Expérience utilisateur
+
+Le site doit être pensé mobile-first, tout en étant spectaculaire sur ordinateur.
+
+Ajouter :
+
+Animations au scroll
+Apparitions progressives des éléments
+Parallaxe légère
+Transitions fluides entre les pages
+Micro-interactions sur les boutons
+Effets hover sur les cartes
+Compteurs animés
+Éléments qui se déplacent légèrement au passage de la souris
+Transitions élégantes entre les sections
+
+Les animations doivent rester fluides et professionnelles. Ne pas surcharger le site.
+
+Ajouter éventuellement une animation de chargement très courte avec le logo ROYAL AUTO-ÉCOLE, inspirée d'un compteur de vitesse ou d'un tableau de bord automobile.
+
+3. Navigation
+
+Créer une navigation fixe en haut de page.
+
+Logo :
+ROYAL
+AUTO-ÉCOLE
+
+Menu :
+
+Accueil
+Qui sommes-nous ?
+Nos formations
+Réglementation & documents
+Sécurité routière
+Actualités / Conseils
+Contact
+
+Ajouter un bouton CTA très visible :
+"Je m'inscris"
+
+Sur mobile, utiliser un menu hamburger élégant.
+
+La navigation doit devenir légèrement plus compacte et opaque lorsqu'on descend dans la page.
+
+PAGE 1 — ACCUEIL
+
+La page d'accueil doit être la page la plus spectaculaire du site.
+
+Hero
+
+Créer un hero plein écran avec une photographie automobile très qualitative : voiture d'auto-école moderne, route française, ambiance dynamique et premium.
+
+Ajouter un léger overlay sombre afin que le texte reste parfaitement lisible.
+
+Texte principal :
+
+ROYAL AUTO-ÉCOLE
+
+"La route vers votre liberté commence ici."
+
+Sous-titre :
+
+"Permis B, conduite accompagnée et formation au code de la route à Brueil-le-Vert."
+
+Boutons :
+Découvrir nos formations
+Nous contacter
+
+Ajouter un petit indicateur de scroll animé.
+
+Pourquoi pas intégrer une animation subtile de ligne de route qui traverse le hero.
+
+Section chiffres clés
+
+Créer une section très visuelle avec des statistiques animées :
+
+X années d'expérience
+X élèves accompagnés
+X % de réussite
+Une équipe à votre écoute
+
+Prévoir des valeurs facilement modifiables.
+
+Section "Pourquoi Royal ?"
+
+Créer 4 cartes :
+
+Un accompagnement humain
+"Chaque élève bénéficie d'un suivi personnalisé."
+
+Une pédagogie moderne
+"Des outils et méthodes adaptés aux nouvelles générations."
+
+Une équipe à l'écoute
+"Des moniteurs disponibles, patients et pédagogues."
+
+Votre réussite avant tout
+"Notre objectif : vous donner les connaissances et la confiance nécessaires pour prendre la route."
+
+Ajouter des icônes élégantes.
+
+Section formations
+
+Présenter les principales formations sous forme de grandes cartes :
+
+Permis B
+Conduite accompagnée (AAC)
+Conduite supervisée
+Code de la route
+Remise à niveau / perfectionnement si pertinent
+
+Chaque carte possède :
+
+Une image
+Un court descriptif
+Un bouton "Découvrir"
+
+Créer un effet hover avec léger zoom de l'image.
+
+Section "Comment ça marche ?"
+
+Créer une timeline en 4 étapes :
+
+01 — Inscription
+02 — Code de la route
+03 — Formation à la conduite
+04 — Permis en poche
+
+Utiliser une ligne graphique rappelant une route.
+
+Section avis
+
+Créer une section témoignages avec plusieurs avis clients.
+
+Design sous forme de cartes flottantes.
+
+Afficher :
+
+Prénom
+Note ⭐⭐⭐⭐⭐
+Témoignage
+
+Prévoir une structure facilement modifiable afin de pouvoir intégrer de vrais avis plus tard.
+
+CTA final
+
+Grande section très visuelle :
+
+"Prêt(e) à prendre la route ?"
+
+"Faisons de votre permis une réussite."
+
+Bouton :
+Contactez Royal Auto-école
+
+PAGE 2 — QUI SOMMES-NOUS ?
+
+Créer une page dédiée à l'histoire et aux valeurs de Royal Auto-école.
+
+Hero :
+
+"Une auto-école, mais surtout une équipe."
+
+Présenter :
+
+L'histoire de l'auto-école
+Sa création
+Son implantation à Brueil-le-Vert
+Sa philosophie
+Ses valeurs
+L'équipe
+
+Créer une timeline élégante pour raconter l'histoire de l'établissement.
+
+Ajouter une section avec des photos de l'équipe.
+
+Créer une section :
+
+Nos valeurs
+
+Confiance
+Respect
+Pédagogie
+Sécurité
+Réussite
+
+Ajouter des animations lors du scroll.
+
+PAGE 3 — NOS FORMATIONS
+
+Créer une page dédiée aux formations.
+
+Chaque formation doit avoir sa propre grande section.
+
+Permis B
+
+Présenter :
+
+À qui s'adresse la formation
+Déroulement
+Code
+Heures de conduite
+Évaluation
+Examen
+Informations pratiques
+Conduite accompagnée — AAC
+
+Expliquer simplement :
+
+Conditions
+Déroulement
+Avantages
+Accompagnement
+Conduite supervisée
+
+Présenter le fonctionnement et les avantages.
+
+Code de la route
+
+Présenter :
+
+Entraînement
+Séries
+Suivi
+Conseils
+
+Ajouter un CTA sur chaque formation :
+"Je veux en savoir plus"
+
+Prévoir des blocs de prix optionnels mais facilement modifiables.
+
+Ne jamais inventer de tarifs : utiliser des placeholders comme :
+"À partir de XX €"
+ou
+"Demandez votre devis".
+
+PAGE 4 — RÉGLEMENTATION & DOCUMENTS
+
+Créer une page pratique et extrêmement claire.
+
+Titre :
+
+"Tout ce qu'il faut savoir avant de commencer."
+
+Créer une interface avec plusieurs catégories.
+
+Documents à fournir
+
+Créer des cartes ou une checklist interactive :
+
+☐ Pièce d'identité
+☐ Justificatif de domicile
+☐ Photos d'identité / e-photo
+☐ ASSR / ASR si nécessaire
+☐ Documents relatifs à la JDC selon situation
+☐ Documents administratifs nécessaires à l'inscription
+
+Attention : ne pas présenter une liste comme universelle si les documents dépendent de l'âge ou de la situation. Ajouter une mention :
+"La liste peut varier selon votre situation. Contactez-nous pour vérifier votre dossier."
+
+Réglementation
+
+Créer des accordéons :
+
+Conditions d'inscription
+Âge minimum
+Permis B
+Conduite accompagnée
+Conduite supervisée
+Examen du code
+Examen pratique
+Documents administratifs
+Règles concernant les accompagnateurs
+
+L'objectif est de rendre une information potentiellement complexe très simple à comprendre.
+
+Ajouter un encadré :
+
+"Une question sur votre dossier ?"
+
+Bouton :
+Contactez-nous
+
+PAGE 5 — SÉCURITÉ ROUTIÈRE
+
+Créer une page beaucoup plus ludique.
+
+Titre :
+
+"La route, ça s'apprend. La sécurité, ça se vit."
+
+Créer une interface interactive autour de la sécurité routière.
+
+Les panneaux
+
+Créer une grille de panneaux routiers sous forme de cartes.
+
+Catégories :
+
+Danger
+Interdiction
+Obligation
+Indication
+Priorité
+
+Lorsqu'on survole ou clique sur un panneau :
+
+Le panneau s'agrandit légèrement
+Une animation apparaît
+Une explication courte s'affiche
+
+Exemple :
+
+STOP
+"Arrêt obligatoire avant de s'engager."
+
+Cédez le passage
+"Ralentissez et laissez la priorité aux usagers concernés."
+
+Utiliser de vrais symboles/pictogrammes routiers appropriés et éviter les représentations incorrectes.
+
+Mini quiz
+
+Ajouter un petit quiz interactif :
+
+"Que feriez-vous dans cette situation ?"
+
+Afficher une situation de conduite puis 3 réponses.
+
+Après réponse :
+
+Bonne réponse → animation positive
+Mauvaise réponse → explication pédagogique
+
+Prévoir plusieurs questions.
+
+Section "Les réflexes qui sauvent"
+
+Cartes :
+
+Ceinture
+Téléphone
+Alcool
+Vitesse
+Distances de sécurité
+Somnolence
+
+Design très visuel.
+
+PAGE 6 — CONSEILS / ACTUALITÉS
+
+Créer une petite partie éditoriale permettant à l'auto-école de publier du contenu.
+
+Exemples d'articles :
+
+"5 erreurs à éviter le jour du permis"
+"Comment réussir son code de la route ?"
+"Bien gérer son stress avant l'examen"
+"Conduite accompagnée : tout comprendre"
+"Les panneaux que vous devez absolument connaître"
+
+Créer une grille d'articles avec image, catégorie, date et bouton "Lire".
+
+Prévoir une structure CMS-friendly si possible.
+
+PAGE 7 — CONTACT
+
+Créer une page contact moderne et rassurante.
+
+Hero :
+
+"Une question ? Parlons-en."
+
+Afficher :
+
+Adresse
+Téléphone
+Email
+Horaires
+Réseaux sociaux
+
+Ajouter un formulaire :
+
+Prénom
+Nom
+Téléphone
+Email
+Sujet
+Message
+
+Bouton :
+Envoyer ma demande
+
+Ajouter une carte avec la localisation de l'auto-école à Brueil-le-Vert.
+
+Prévoir également un gros bouton :
+Appeler l'auto-école
+
+Sur mobile, ce bouton doit permettre d'appeler directement.
+
+8. FOOTER
+
+Créer un footer premium et complet.
+
+Logo :
+ROYAL AUTO-ÉCOLE
+
+Phrase :
+"La route vers votre liberté commence ici."
+
+Colonnes :
+
+Navigation
+Formations
+Informations
+Contact
+
+Ajouter :
+
+Mentions légales
+Politique de confidentialité
+Gestion des cookies
+
+Ajouter les réseaux sociaux avec leurs icônes.
+
+9. DÉTAILS QUI DOIVENT DONNER L'EFFET "WAOUH"
+
+Ajouter plusieurs petits détails graphiques inspirés de l'automobile :
+
+Ligne de route animée
+Marquages au sol qui servent de séparateurs
+Icônes inspirées d'un tableau de bord
+Compteur de vitesse pour certaines statistiques
+Effets de lumière subtils
+Numéros de sections XXL en arrière-plan
+Transitions entre sections rappelant le déplacement d'une voiture
+Petits éléments graphiques en forme de trajectoire
+Effets de profondeur et de parallaxe
+Cartes avec effet glassmorphism très léger
+Animations de boutons au survol
+
+Créer par exemple une animation où une petite ligne lumineuse suit une trajectoire lorsque l'utilisateur descend dans certaines sections.
+
+Le design doit donner l'impression que la route traverse littéralement le site.
+
+10. RESPONSIVE DESIGN
+
+Le site doit être parfaitement responsive.
+
+Desktop :
+
+Grandes compositions visuelles
+Animations
+Navigation complète
+Effets de parallaxe
+
+Tablette :
+
+Adapter les grilles
+Réduire les animations lourdes
+
+Mobile :
+
+Navigation hamburger
+Boutons facilement accessibles au doigt
+CTA "Appeler" très visible
+Animations plus légères
+Sections parfaitement lisibles
+Aucun texte trop petit
+Aucun débordement horizontal
+11. SEO LOCAL
+
+Optimiser le site pour les recherches locales autour de :
+
+Auto-école Brueil-le-Vert
+Auto-école Oise 60
+Permis B Brueil-le-Vert
+Code de la route Brueil-le-Vert
+Conduite accompagnée Oise
+Permis voiture Oise
+
+Prévoir :
+
+Balises title uniques
+Meta descriptions
+H1/H2 cohérents
+Données structurées LocalBusiness / DrivingSchool si pertinentes
+Informations NAP cohérentes
+URLs propres
+Open Graph
+Favicon
+Sitemap
+
+Ne pas faire de keyword stuffing.
+
+12. ACCESSIBILITÉ ET PERFORMANCE
+
+Le site doit être :
+
+Rapide
+Accessible
+Compatible mobile
+Compatible clavier
+Avec contrastes suffisants
+Avec textes alternatifs sur les images
+Avec respect de prefers-reduced-motion
+
+Les animations ne doivent jamais empêcher la lecture ou la navigation.
+
+Optimiser les images et utiliser le lazy loading lorsque pertinent.
+
+13. TON ÉDITORIAL
+
+Le ton doit être :
+
+Humain
+Direct
+Positif
+Rassurant
+Jeune sans être infantilisant
+Professionnel mais pas administratif
+
+Éviter les phrases trop génériques comme :
+"Bienvenue dans notre auto-école, spécialiste de la formation..."
+
+Privilégier des formulations fortes comme :
+
+"Votre permis. Votre liberté. Votre route."
+
+"Pas juste apprendre à conduire. Apprendre à prendre la route."
+
+"Une équipe derrière vous, du premier cours jusqu'à l'examen."
+
+14. IMPORTANT — CONTENU MODIFIABLE
+
+Toutes les informations spécifiques à l'auto-école doivent être facilement modifiables :
+
+Logo
+Photos
+Adresse
+Téléphone
+Email
+Horaires
+Tarifs
+Taux de réussite
+Nombre d'élèves
+Année de création
+Présentation de l'équipe
+Avis clients
+Réseaux sociaux
+Formations proposées
+
+Ne jamais inventer de données réelles concernant Royal Auto-école.
+
+Utiliser des placeholders clairement identifiés lorsque l'information n'est pas fournie.
+
+15. OBJECTIF FINAL
+
+Le résultat doit donner l'impression d'un site réalisé par une agence web premium spécialisée dans l'automobile, et non d'un simple site vitrine d'auto-école.
+
+Quand quelqu'un arrive sur le site, il doit immédiatement comprendre :
+
+1. Qui est Royal Auto-école
+2. Où elle se trouve
+3. Ce qu'elle propose
+4. Pourquoi lui faire confiance
+5. Comment s'inscrire ou prendre contact
+
+Mais surtout, il doit ressentir une identité forte.
+
+Le mot ROYAL doit être reconnaissable visuellement et devenir une véritable marque.
+
+Le site doit être élégant, spectaculaire, dynamique, rassurant et local, avec une vraie personnalité.
+
+Créer l'ensemble comme un produit fini et cohérent, avec toutes les pages, les interactions, les animations, les états hover, les états mobile et les CTA fonctionnels.
